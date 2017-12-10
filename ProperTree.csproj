@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    
+    <AssemblyTitle>ProperTree</AssemblyTitle>
+    <Authors>copygirl</Authors>
+    <Version>0.1.0</Version>
+    
+    <Description></Description>
+    <RepositoryUrl>https://github.com/copygirl/ProperTree</RepositoryUrl>
+    
+    <TargetFrameworks>netcoreapp2.0;net452</TargetFrameworks>
+    <LangVersion>latest</LangVersion>
+    
+  </PropertyGroup>
+</Project>

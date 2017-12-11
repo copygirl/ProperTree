@@ -32,7 +32,7 @@ namespace ProperTree
 			if (!type.IsGenericType) return name;
 			
 			var typeArgumentNames = type.GenericTypeArguments.Select(t => GetFriendlyName(t, full));
-			return $"{ name.Substring(0, name.LastIndexOf('`')) }<{ string.Join(',', typeArgumentNames) }>";
+			return $"{ name.Substring(0, name.LastIndexOf('`')) }<{ string.Join(",", typeArgumentNames) }>";
 		}
 	}
 }

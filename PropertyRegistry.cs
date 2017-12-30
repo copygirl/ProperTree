@@ -21,19 +21,20 @@ namespace ProperTree
 		
 		static PropertyRegistry()
 		{
-			Register<bool>();
-			Register<byte>();
-			Register<short>();
-			Register<int>();
-			Register<long>();
-			Register<float>();
-			Register<double>();
-			Register<string>();
+			RegisterValueType<bool>();
+			RegisterValueType<byte>();
+			RegisterValueType<short>();
+			RegisterValueType<int>();
+			RegisterValueType<long>();
+			RegisterValueType<float>();
+			RegisterValueType<double>();
+			PropertyPrimitive<string>.RegisterConverters();
 			
-			void Register<T>()
+			void RegisterValueType<T>()
+				where T : struct
 			{
 				PropertyPrimitive<T>.RegisterConverters();
-				PropertyList.RegisterConverters<T>();
+				PropertyArray<T>.RegisterConverters();
 			}
 		}
 		
@@ -49,7 +50,7 @@ namespace ProperTree
 				$"The ID { id } is not within the valid range ({ MIN_ID } - { MAX_ID })");
 			if (deSerializer == null) throw new ArgumentNullException(nameof(deSerializer));
 			if (_binaryDeSerializersByID[id] != null) throw new InvalidOperationException(
-				$"The ID { id } is already in use by de/serializer '{ _binaryDeSerializersByID[id].GetType() }'");
+				$"The ID { id } is already in use by de/serializer '{ _binaryDeSerializersByID[id].GetType().ToFriendlyString() }'");
 			_binaryDeSerializersByID[id] = deSerializer;
 		}
 		
@@ -62,7 +63,7 @@ namespace ProperTree
 		{
 			if (converter == null) throw new ArgumentNullException(nameof(converter));
 			if (_toPropertyConverters.TryGetValue(typeof(TFrom), out var value)) throw new InvalidOperationException(
-				$"There's already a value => property converter registered for type '{ typeof(TFrom) }'");
+				$"There's already a value => property converter registered for type '{ typeof(TFrom).ToFriendlyString() }'");
 			_toPropertyConverters.Add(typeof(TFrom), ToPropertyConverter.Create(converter));
 		}
 		
@@ -76,7 +77,8 @@ namespace ProperTree
 			if (converter == null) throw new ArgumentNullException(nameof(converter));
 			var typePair = Tuple.Create(typeof(TFromProperty), typeof(TTo));
 			if (_fromPropertyConverters.TryGetValue(typePair, out var value)) throw new InvalidOperationException(
-				$"There's already a property => value converter registered for types ('{ typeof(TFromProperty).Name }', '{ typeof(TTo) }')");
+				"There's already a property => value converter registered for types " +
+				$"('{ typeof(TFromProperty).ToFriendlyString() }' => '{ typeof(TTo).ToFriendlyString() }')");
 			_fromPropertyConverters.Add(typePair, FromPropertyConverter.Create(converter));
 		}
 		
@@ -90,7 +92,7 @@ namespace ProperTree
 		public static IPropertyBinaryDeSerializer GetDeSerializerByType(Type propertyType)
 		{
 			if (!typeof(Property).IsAssignableFrom(propertyType)) throw new ArgumentException(
-				$"The specified property type is not actually a Property type", nameof(propertyType));
+				$"The specified property type '{ propertyType.ToFriendlyString() }' is not actually a Property type", nameof(propertyType));
 			return _binaryDeSerializersByType.TryGetValue(propertyType, out var value) ? value : null;
 		}
 		/// <summary> Returns the de/serializer for the specified property type, or null if none. </summary>
@@ -113,8 +115,8 @@ namespace ProperTree
 		/// <exception cref="NotSupportedException"> Thrown if the specified type has no ToPropertyConverter registered. </exception>
 		public static Converter<object, Property> GetToPropertyConverter(Type valueType)
 		{
-			if (!TryGetToPropertyConverter(valueType, out var value))
-				throw new NotSupportedException($"No ToPropertyConverter was registered for value type '{ valueType }'");
+			if (!TryGetToPropertyConverter(valueType, out var value)) throw new NotSupportedException(
+				$"No ToPropertyConverter was registered for value type '{ valueType.ToFriendlyString() }'");
 			return value;
 		}
 		
@@ -129,8 +131,8 @@ namespace ProperTree
 		/// <exception cref="NotSupportedException"> Thrown if the specified type has no ToPropertyConverter registered. </exception>
 		public static Converter<TValue, Property> GetToPropertyConverter<TValue>()
 		{
-			if (!TryGetToPropertyConverter<TValue>(out var value))
-				throw new NotSupportedException($"No ToPropertyConverter was registered for value type '{ typeof(TValue) }'");
+			if (!TryGetToPropertyConverter<TValue>(out var value)) throw new NotSupportedException(
+				$"No ToPropertyConverter was registered for value type '{ typeof(TValue).ToFriendlyString() }'");
 			return value;
 		}
 		
@@ -155,7 +157,8 @@ namespace ProperTree
 		public static Converter<Property, TValue> GetFromPropertyConverter<TValue>(Type propertyType)
 		{
 			if (!TryGetFromPropertyConverter<TValue>(propertyType, out var value)) throw new NotSupportedException(
-				$"No FromPropertyConverter was registered for value type '{ typeof(TValue) }' and property type '{ propertyType }'");
+				$"No FromPropertyConverter was registered for value type '{ typeof(TValue) }' " +
+				$"and property type '{ propertyType.ToFriendlyString() }'");
 			return value;
 		}
 		
@@ -174,7 +177,8 @@ namespace ProperTree
 			where TProperty : Property
 		{
 			if (!TryGetFromPropertyConverter<TValue, TProperty>(out var value)) throw new NotSupportedException(
-				$"No FromPropertyConverter was registered for value type '{ typeof(TValue) }' and property type '{ typeof(TProperty) }'");
+				$"No FromPropertyConverter was registered for value type '{ typeof(TValue).ToFriendlyString() }' " +
+				$"and property type '{ typeof(TProperty).ToFriendlyString() }'");
 			return value;
 		}
 		

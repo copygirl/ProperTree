@@ -1,16 +1,15 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace ProperTree
 {
-	public class PropertyDictionary : Property
+	public class PropertyDictionary
+		: Property, IDictionary<string, Property>
 	{
 		private Dictionary<string, Property> _dict
 			= new Dictionary<string, Property>();
-		
-		public override bool IsCollection => true;
-		public override bool IsDictionary => true;
-		
 		
 		public override Property this[string name] {
 			get {
@@ -24,14 +23,28 @@ namespace ProperTree
 			}
 		}
 		
-		public override void Add(string name, Property property)
+		
+		/// <summary> Adds the an entry with the specified name and property to this dictionary property. </summary>
+		/// <exception cref="ArgumentNullException"> Thrown if the specified name or property is null. </exception>
+		/// <exception cref="ArgumentException"> Thrown if an entry with the same name already exists. </exception>
+		public void Add(string name, Property property)
 		{
 			if (name == null) throw new ArgumentNullException(nameof(name));
 			if (property == null) throw new ArgumentNullException(nameof(property));
 			_dict.Add(name, property);
 		}
 		
-		public override Property Remove(string name)
+		/// <summary> Adds the an entry with the specified name and value to this dictionary property. </summary>
+		/// <exception cref="ArgumentNullException"> Thrown if the specified name or value is null. </exception>
+		/// <exception cref="ArgumentException"> Thrown if an entry with the same name already exists. </exception>
+		/// <exception cref="NotSupportedException"> Thrown if the specified value can't be converted to a Property. </exception>
+		public void Add<T>(string name, T value)
+			=> Add(name, Property.Of(value));
+		
+		/// <summary> Removes the entry with the specified name from this dictionary property,
+		///           and returns the removed value, or null if the name was not found. </summary>
+		/// <exception cref="ArgumentNullException"> Thrown if the specified name is null. </exception>
+		public Property Remove(string name)
 		{
 			if (name == null) throw new ArgumentNullException(nameof(name));
 			_dict.TryGetValue(name, out var property);
@@ -40,14 +53,94 @@ namespace ProperTree
 		}
 		
 		
-		// IReadOnlyCollection implementation
+		public override bool Equals(Property other)
+			=> (other is PropertyDictionary dict)
+				&& (Count == dict.Count) && _dict.All(entry =>
+					(dict._dict.TryGetValue(entry.Key, out var value)
+						&& (value == entry.Value)));
 		
-		public override int Count => _dict.Count;
 		
-		public override IEnumerator<Property> GetEnumerator()
-			=> _dict.Values.GetEnumerator();
+		// IDictionary implementation
 		
-		protected override IEnumerator<KeyValuePair<string, Property>> GetDictionaryEnumerator()
+		/// <summary> Gets the number of entries in this dictionary property. </summary>
+		public int Count => _dict.Count;
+		
+		/// <summary> Gets a collection containing the keys in this dictionary property. </summary>
+		public ICollection<string> Keys => _dict.Keys;
+		
+		/// <summary> Gets a collection containing the values in this dictionary property. </summary>
+		public ICollection<Property> Values => _dict.Values;
+		
+		bool IDictionary<string, Property>.TryGetValue(string key, out Property value)
+			=> _dict.TryGetValue(key, out value);
+		
+		bool IDictionary<string, Property>.ContainsKey(string key)
+			=> _dict.ContainsKey(key);
+		
+		bool IDictionary<string, Property>.Remove(string key)
+			=> _dict.Remove(key);
+		
+		/// <summary> Clears all entries from this dictionary property. </summary>
+		public void Clear() => _dict.Clear();
+		
+		// ICollection implementation
+		
+		bool ICollection<KeyValuePair<string, Property>>.IsReadOnly => false;
+		
+		void ICollection<KeyValuePair<string, Property>>.Add(KeyValuePair<string, Property> value)
+			=> ((ICollection<KeyValuePair<string, Property>>)_dict).Add(value);
+		
+		bool ICollection<KeyValuePair<string, Property>>.Contains(KeyValuePair<string, Property> value)
+			=> ((ICollection<KeyValuePair<string, Property>>)_dict).Contains(value);
+		
+		bool ICollection<KeyValuePair<string, Property>>.Remove(KeyValuePair<string, Property> value)
+			=> ((ICollection<KeyValuePair<string, Property>>)_dict).Remove(value);
+		
+		void ICollection<KeyValuePair<string, Property>>.CopyTo(KeyValuePair<string, Property>[] array, int arrayIndex)
+			=> ((ICollection<KeyValuePair<string, Property>>)_dict).CopyTo(array, arrayIndex);
+		
+		// IEnumerable implementation
+		
+		/// <summary> Returns an enumerator that iterates over
+		///           tne entries in this dictionary property. </summary>
+		public IEnumerator<KeyValuePair<string, Property>> GetEnumerator()
 			=> _dict.GetEnumerator();
+		
+		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+	}
+	
+	public static class PropertyDictionaryExtensions
+	{
+		// TODO: Add "TryAdd", "TryRemove", maybe "TryUpdate", etc instead..?
+		
+		private static PropertyDictionary AsDictionary(this Property self)
+		{
+			if (self == null) throw new ArgumentNullException(nameof(self));
+			if (!(self is PropertyDictionary d)) throw new InvalidOperationException(
+				$"Not a dictionary Property: '{ self.GetType().ToFriendlyString() }'");
+			return d;
+		}
+		
+		/// <summary> Adds the an entry with the specified name and property to the specified dictionary property. </summary>
+		/// <exception cref="InvalidOperationException"> Thrown if the specified property is not a dictionary. </exception>
+		/// <exception cref="ArgumentNullException"> Thrown if the specified dictionary, name or property is null. </exception>
+		/// <exception cref="ArgumentException"> Thrown if an entry with the same name already exists. </exception>
+		public static void Add(this Property self, string name, Property property)
+			=> self.AsDictionary().Add(name, property);
+		
+		/// <summary> Adds the an entry with the specified name and value to the specified dictionary property. </summary>
+		/// <exception cref="InvalidOperationException"> Thrown if the specified property is not a dictionary. </exception>
+		/// <exception cref="ArgumentNullException"> Thrown if the specified dictionary, name or value is null. </exception>
+		/// <exception cref="ArgumentException"> Thrown if an entry with the same name already exists. </exception>
+		/// <exception cref="NotSupportedException"> Thrown if the specified value can't be converted to a Property. </exception>
+		public static void Add<T>(this Property self, string name, T value)
+			=> self.AsDictionary().Add(name, value);
+		
+		/// <summary> Removes the entry with the specified name from the specified dictionary property,
+		///           and returns the removed value, or null if the name was not found. </summary>
+		/// <exception cref="InvalidOperationException"> Thrown if the specified property is not a dictionary. </exception>
+		/// <exception cref="ArgumentNullException"> Thrown if the specified dictionary or name is null. </exception>
+		public static Property Remove(this Property self, string name)
+			=> self.AsDictionary().Remove(name);
 	}
 }

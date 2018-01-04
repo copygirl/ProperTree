@@ -105,6 +105,10 @@ namespace ProperTree
 		}
 		
 		
+		// IEquatable implementation
+		
+		/// <summary> Returns if the specified property's value
+		///           (recursively) equals this property's value. </summary>
 		public abstract bool Equals(Property property);
 	}
 }

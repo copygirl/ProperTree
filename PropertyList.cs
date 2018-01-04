@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace ProperTree
@@ -8,7 +9,10 @@ namespace ProperTree
 	public class PropertyList
 		: Property, IList<Property>
 	{
-		private List<Property> _list = new List<Property>();
+		public static readonly int MAX_SIZE = ushort.MaxValue;
+		
+		
+		private readonly List<Property> _list = new List<Property>();
 		
 		public override Property this[int index] {
 			get => _list[index];
@@ -20,24 +24,29 @@ namespace ProperTree
 		
 		/// <summary> Adds the specified property to the end of this list property. </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified property is null. </exception>
+		/// <exception cref="InvalidOperationException"> Thrown if this list property's size is already at <see cref="MAX_SIZE"/>. </exception>
 		public void Add(Property property)
 			=> Insert(Count, property);
 		
 		/// <summary> Adds the specified value to the end of this list property. </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified value is null. </exception>
 		/// <exception cref="NotSupportedException"> Thrown if the specified value can't be converted to a Property. </exception>
+		/// <exception cref="InvalidOperationException"> Thrown if this list property's size is already at <see cref="MAX_SIZE"/>. </exception>
 		public void Add<T>(T value)
 			=> Add(Property.Of(value));
 		
 		/// <summary> Inserts the specified property at the specified index in this list property. </summary>
 		/// <exception cref="ArgumentOutOfRangeException"> Thrown if the specified index is not valid. </exception>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified property is null. </exception>
+		/// <exception cref="InvalidOperationException"> Thrown if this list property's size is already at <see cref="MAX_SIZE"/>. </exception>
 		public void Insert(int index, Property property)
 		{
 			var count = _list?.Count ?? 0;
 			if ((index < 0) || (index > count))
 				throw new ArgumentOutOfRangeException(nameof(index));
 			if (property == null) throw new ArgumentNullException(nameof(property));
+			if (_list.Count == MAX_SIZE) throw new InvalidOperationException(
+				$"PropertyList can't exceed MAX_SIZE (${ MAX_SIZE })");
 			_list.Insert(index, property);
 		}
 		
@@ -45,6 +54,7 @@ namespace ProperTree
 		/// <exception cref="ArgumentOutOfRangeException"> Thrown if the specified index is not valid. </exception>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified value is null. </exception>
 		/// <exception cref="NotSupportedException"> Thrown if the specified value can't be converted to a Property. </exception>
+		/// <exception cref="InvalidOperationException"> Thrown if this list property's size is already at <see cref="MAX_SIZE"/>. </exception>
 		public void Insert<T>(int index, T value)
 			=> Insert(index, Property.Of(value));
 		
@@ -114,6 +124,32 @@ namespace ProperTree
 			=> _list.GetEnumerator();
 		
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+		
+		
+		// De/serializer
+		
+		public class DeSerializer
+			: PropertyBinaryDeSerializer<PropertyList>
+		{
+			public override PropertyList Read(BinaryReader reader)
+			{
+				var list = new PropertyList();
+				var count = reader.ReadUInt16();
+				if (count > MAX_SIZE) throw new Exception(
+					$"PropertyList count is larger than MAX_SIZE (${ count } > ${ MAX_SIZE })");
+				list._list.Capacity = count;
+				for (var i = 0; i < count; i++)
+					list.Add(PropertyRegistry.ReadProperty(reader));
+				return list;
+			}
+			
+			public override void Write(BinaryWriter writer, PropertyList list)
+			{
+				writer.Write((ushort)list.Count);
+				foreach (var property in list)
+					PropertyRegistry.WriteProperty(writer, property);
+			}
+		}
 	}
 	
 	public static class ProperlyListExtensions
@@ -129,27 +165,39 @@ namespace ProperTree
 		}
 		
 		/// <summary> Adds the specified property to the end of the specified list property. </summary>
-		/// <exception cref="InvalidOperationException"> Thrown if the specified list is not actually a list. </exception>
+		/// <exception cref="InvalidOperationException">
+		///   Thrown if the specified list is not actually a list
+		///   -OR- if this list property's size is already at <see cref="PropertyList.MAX_SIZE"/>.
+		/// </exception>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified list or property is null. </exception>
 		public static void Add(this Property self, Property property)
 			=> self.AsList().Add(property);
 		
 		/// <summary> Adds the specified value to the end of the specified list property. </summary>
-		/// <exception cref="InvalidOperationException"> Thrown if the specified list is not actually a list. </exception>
+		/// <exception cref="InvalidOperationException">
+		///   Thrown if the specified list is not actually a list
+		///   -OR- if this list property's size is already at <see cref="PropertyList.MAX_SIZE"/>.
+		/// </exception>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified list or value is null. </exception>
 		/// <exception cref="NotSupportedException"> Thrown if the specified value can't be converted to a Property. </exception>
 		public static void Add<T>(this Property self, T value)
 			=> self.AsList().Add(value);
 		
 		/// <summary> Inserts the specified property at the specified index in the specified list property. </summary>
-		/// <exception cref="InvalidOperationException"> Thrown if the specified list is not actually a list. </exception>
+		/// <exception cref="InvalidOperationException">
+		///   Thrown if the specified list is not actually a list
+		///   -OR- if this list property's size is already at <see cref="PropertyList.MAX_SIZE"/>.
+		/// </exception>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified list or property is null. </exception>
 		/// <exception cref="ArgumentOutOfRangeException"> Thrown if the specified index is not valid. </exception>
 		public static void Insert(this Property self, int index, Property property)
 			=> self.AsList().Insert(index, property);
 		
 		/// <summary> Inserts the specified value at the specified index in the specified list property. </summary>
-		/// <exception cref="InvalidOperationException"> Thrown if the specified list is not actually a list. </exception>
+		/// <exception cref="InvalidOperationException">
+		///   Thrown if the specified list is not actually a list
+		///   -OR- if this list property's size is already at <see cref="PropertyList.MAX_SIZE"/>.
+		/// </exception>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified list or value is null. </exception>
 		/// <exception cref="ArgumentOutOfRangeException"> Thrown if the specified index is not valid. </exception>
 		/// <exception cref="NotSupportedException"> Thrown if the specified value can't be converted to a Property. </exception>

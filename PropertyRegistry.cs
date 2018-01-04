@@ -4,6 +4,7 @@ using System.IO;
 
 namespace ProperTree
 {
+	// TODO: Split converter and de/serializer related code into 2 different classes?
 	public static class PropertyRegistry
 	{
 		public static int MIN_ID { get; } = 1;
@@ -11,8 +12,8 @@ namespace ProperTree
 		
 		private static IPropertyBinaryDeSerializer[] _binaryDeSerializersByID
 			= new IPropertyBinaryDeSerializer[MAX_ID];
-		private static Dictionary<Type, IPropertyBinaryDeSerializer> _binaryDeSerializersByType
-			= new Dictionary<Type, IPropertyBinaryDeSerializer>();
+		private static Dictionary<Type, Tuple<int, IPropertyBinaryDeSerializer>> _binaryDeSerializersByType
+			= new Dictionary<Type, Tuple<int, IPropertyBinaryDeSerializer>>();
 		private static Dictionary<Type, ToPropertyConverter> _toPropertyConverters
 			= new Dictionary<Type, ToPropertyConverter>();
 		private static Dictionary<Tuple<Type, Type>, FromPropertyConverter> _fromPropertyConverters
@@ -21,38 +22,45 @@ namespace ProperTree
 		
 		static PropertyRegistry()
 		{
-			RegisterValueType<bool>();
-			RegisterValueType<byte>();
-			RegisterValueType<short>();
-			RegisterValueType<int>();
-			RegisterValueType<long>();
-			RegisterValueType<float>();
-			RegisterValueType<double>();
+			RegisterValueTypeConverters<bool>();
+			RegisterValueTypeConverters<byte>();
+			RegisterValueTypeConverters<short>();
+			RegisterValueTypeConverters<int>();
+			RegisterValueTypeConverters<long>();
+			RegisterValueTypeConverters<float>();
+			RegisterValueTypeConverters<double>();
 			PropertyPrimitive<string>.RegisterConverters();
 			
-			void RegisterValueType<T>()
+			void RegisterValueTypeConverters<T>()
 				where T : struct
 			{
 				PropertyPrimitive<T>.RegisterConverters();
 				PropertyArray<T>.RegisterConverters();
 			}
+			
+			RegisterDeSerializer( 0x01 , new PropertyPrimitive<  bool>.DeSerializer( reader => reader.ReadBoolean() , (writer, value) => writer.Write(value) ));
+			RegisterDeSerializer( 0x02 , new PropertyPrimitive<  byte>.DeSerializer( reader => reader.ReadByte()    , (writer, value) => writer.Write(value) ));
+			RegisterDeSerializer( 0x03 , new PropertyPrimitive< short>.DeSerializer( reader => reader.ReadInt16()   , (writer, value) => writer.Write(value) ));
+			RegisterDeSerializer( 0x04 , new PropertyPrimitive<   int>.DeSerializer( reader => reader.ReadInt32()   , (writer, value) => writer.Write(value) ));
+			RegisterDeSerializer( 0x05 , new PropertyPrimitive<  long>.DeSerializer( reader => reader.ReadInt64()   , (writer, value) => writer.Write(value) ));
+			RegisterDeSerializer( 0x06 , new PropertyPrimitive< float>.DeSerializer( reader => reader.ReadSingle()  , (writer, value) => writer.Write(value) ));
+			RegisterDeSerializer( 0x07 , new PropertyPrimitive<double>.DeSerializer( reader => reader.ReadDouble()  , (writer, value) => writer.Write(value) ));
+			RegisterDeSerializer( 0x10 , new PropertyPrimitive<string>.DeSerializer( reader => reader.ReadString()  , (writer, value) => writer.Write(value) ));
+			
+			RegisterDeSerializer( 0x21, new PropertyArray<  bool>.DeSerializer() );
+			RegisterDeSerializer( 0x22, new PropertyByteArrayDeSerializer() );
+			RegisterDeSerializer( 0x23, new PropertyArray< short>.DeSerializer() );
+			RegisterDeSerializer( 0x24, new PropertyArray<   int>.DeSerializer() );
+			RegisterDeSerializer( 0x25, new PropertyArray<  long>.DeSerializer() );
+			RegisterDeSerializer( 0x26, new PropertyArray< float>.DeSerializer() );
+			RegisterDeSerializer( 0x27, new PropertyArray<double>.DeSerializer() );
+			
+			RegisterDeSerializer( 0x30, new PropertyList.DeSerializer() );
+			RegisterDeSerializer( 0x31, new PropertyDictionary.DeSerializer() );
 		}
 		
 		
-		/// <summary> Registers a binary de/serializer for the specified property type with the specified ID. </summary>
-		/// <exception cref="ArgumentOutOfRangeException"> Thrown if the specified ID is outside the valid range (MIN_ID - MAX_ID). </exception>
-		/// <exception cref="ArgumentNullException"> Thrown if the specified de/serializer is null. </exception>
-		/// <exception cref="InvalidOperationException"> Thrown if the specified ID is already used. </exception>
-		public static void RegisterDeSerializer<TProperty>(int id, PropertyBinaryDeSerializer<TProperty> deSerializer)
-			where TProperty : Property
-		{
-			if ((id < MIN_ID) || (id > MAX_ID)) throw new ArgumentOutOfRangeException(nameof(id),
-				$"The ID { id } is not within the valid range ({ MIN_ID } - { MAX_ID })");
-			if (deSerializer == null) throw new ArgumentNullException(nameof(deSerializer));
-			if (_binaryDeSerializersByID[id] != null) throw new InvalidOperationException(
-				$"The ID { id } is already in use by de/serializer '{ _binaryDeSerializersByID[id].GetType().ToFriendlyString() }'");
-			_binaryDeSerializersByID[id] = deSerializer;
-		}
+		// Value <=> Property converters
 		
 		/// <summary> Registers a value => property converter. Required to use <see cref="Property.Of{T}"/>. </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified converter is null. </exception>
@@ -66,6 +74,7 @@ namespace ProperTree
 				$"There's already a value => property converter registered for type '{ typeof(TFrom).ToFriendlyString() }'");
 			_toPropertyConverters.Add(typeof(TFrom), ToPropertyConverter.Create(converter));
 		}
+		
 		
 		/// <summary> Registers a property => value converter. Required to use <see cref="Property.As{T}"/>. </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified converter is null. </exception>
@@ -81,24 +90,6 @@ namespace ProperTree
 				$"('{ typeof(TFromProperty).ToFriendlyString() }' => '{ typeof(TTo).ToFriendlyString() }')");
 			_fromPropertyConverters.Add(typePair, FromPropertyConverter.Create(converter));
 		}
-		
-		
-		/// <summary> Returns the de/serializer registered with the specified ID, or null if none. </summary>
-		public static IPropertyBinaryDeSerializer GetDeSerializerByID(int id)
-			=> (id > MIN_ID) && (id < MAX_ID) ? _binaryDeSerializersByID[id] : null;
-		
-		/// <summary> Returns the de/serializer for the specified property type, or null if none. </summary>
-		/// <exception cref="ArgumentException"> Thrown if the specified property type not a Property type. </exception>
-		public static IPropertyBinaryDeSerializer GetDeSerializerByType(Type propertyType)
-		{
-			if (!typeof(Property).IsAssignableFrom(propertyType)) throw new ArgumentException(
-				$"The specified property type '{ propertyType.ToFriendlyString() }' is not actually a Property type", nameof(propertyType));
-			return _binaryDeSerializersByType.TryGetValue(propertyType, out var value) ? value : null;
-		}
-		/// <summary> Returns the de/serializer for the specified property type, or null if none. </summary>
-		public static IPropertyBinaryDeSerializer GetDeSerializerByType<TProperty>()
-			where TProperty : Property
-			=> _binaryDeSerializersByType.TryGetValue(typeof(TProperty), out var value) ? value : null;
 		
 		
 		/// <summary> Attempts to get the value => property converter for the specified value type. </summary>
@@ -150,6 +141,7 @@ namespace ProperTree
 			value = found ? converter.Get<TValue>() : null;
 			return found;
 		}
+		
 		/// <summary> Gets the property => value converter for the specified value and property types. </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified property type is null. </exception>
 		/// <exception cref="ArgumentException"> Thrown if the specified property type not a Property type. </exception>
@@ -182,6 +174,118 @@ namespace ProperTree
 			return value;
 		}
 		
+		
+		// De/Serialization
+		
+		/// <summary> Registers a binary de/serializer for the specified property type with the specified ID. </summary>
+		/// <exception cref="ArgumentOutOfRangeException"> Thrown if the specified ID is outside the valid range (MIN_ID - MAX_ID). </exception>
+		/// <exception cref="ArgumentNullException"> Thrown if the specified de/serializer is null. </exception>
+		/// <exception cref="InvalidOperationException"> Thrown if the specified ID is already used. </exception>
+		public static void RegisterDeSerializer<TProperty>(int id, PropertyBinaryDeSerializer<TProperty> deSerializer)
+			where TProperty : Property
+		{
+			if ((id < MIN_ID) || (id > MAX_ID)) throw new ArgumentOutOfRangeException(nameof(id),
+				$"The ID { id } is not within the valid range ({ MIN_ID } - { MAX_ID })");
+			if (deSerializer == null) throw new ArgumentNullException(nameof(deSerializer));
+			if (_binaryDeSerializersByID[id] != null) throw new InvalidOperationException(
+				$"The ID { id } is already in use by de/serializer '{ _binaryDeSerializersByID[id].GetType().ToFriendlyString() }'");
+			
+			_binaryDeSerializersByID[id] = deSerializer;
+			_binaryDeSerializersByType.Add(typeof(TProperty),
+				Tuple.Create(id, (IPropertyBinaryDeSerializer)deSerializer));
+		}
+		
+		
+		/// <summary> Returns the de/serializer registered with the specified ID, or null if none. </summary>
+		public static IPropertyBinaryDeSerializer GetDeSerializerByID(int id)
+			=> (id >= MIN_ID) && (id <= MAX_ID) ? _binaryDeSerializersByID[id] : null;
+		
+		/// <summary> Returns the de/serializer for the specified property, or null if none. </summary>
+		/// <exception cref="ArgumentNullException"> Thrown if the specified property is null. </exception>
+		public static IPropertyBinaryDeSerializer GetDeSerializerFor(Property property, out int id)
+		{
+			if (property == null) throw new ArgumentNullException(nameof(property));
+			return GetDeSerializerByTypeInternal(property.GetType(), out id);
+		}
+		/// <summary> Returns the de/serializer for the specified property type, or null if none. </summary>
+		public static IPropertyBinaryDeSerializer GetDeSerializerByType<TProperty>(out int id)
+			where TProperty : Property
+			=> GetDeSerializerByTypeInternal(typeof(TProperty), out id);
+		
+		private static IPropertyBinaryDeSerializer GetDeSerializerByTypeInternal(
+			Type propertyType, out int id)
+		{
+			if (_binaryDeSerializersByType.TryGetValue(propertyType, out var entry))
+				{ id = entry.Item1; return entry.Item2; }
+			else { id = -1; return null; }
+		}
+		
+		
+		
+		/// <summary> Reads a property de/serializer using the specified reader. </summary>
+		/// <exception cref="ArgumentNullException"> Thrown if the specified reader is null. </exception>
+		/// <exception cref="PropertyParseException"> Thrown if there was an error while reading the de/serializer. </exception>
+		public static IPropertyBinaryDeSerializer ReadDeSerializer(BinaryReader reader)
+		{
+			if (reader == null) throw new ArgumentNullException(nameof(reader));
+			
+			int id;
+			try { id = reader.ReadByte(); }
+			catch (Exception ex) { throw new PropertyParseException(
+				$"Exception while reading property de/serializer ID: { ex.Message }",
+				reader.BaseStream, ex); }
+			
+			var deSerializer = GetDeSerializerByID(id);
+			if (deSerializer == null) throw new PropertyParseException(
+				$"Unknown property de/serializer ID { id }", reader.BaseStream);
+			
+			return deSerializer;
+		}
+		
+		/// <summary> Reads a full property using the specified BinaryReader. </summary>
+		/// <exception cref="ArgumentNullException"> Thrown if the specified reader is null. </exception>
+		/// <exception cref="PropertyParseException"> Thrown if there was an error while reading the property. </exception>
+		public static Property ReadProperty(BinaryReader reader)
+		{
+			if (reader == null) throw new ArgumentNullException(nameof(reader));
+			var deSerializer = ReadDeSerializer(reader);
+			try { return deSerializer.Read(reader); }
+			catch (PropertyParseException) { throw; }
+			catch (Exception ex) {
+				var propertyName = deSerializer.PropertyType.ToFriendlyString();
+				throw new PropertyParseException(
+					$"Exception while reading property '{ propertyName }': { ex.Message }",
+					reader.BaseStream, ex);
+			}
+		}
+		
+		
+		/// <exception cref="ArgumentNullException"> Thrown if the specified writer or property is null. </exception>
+		public static IPropertyBinaryDeSerializer GetAndWriteDeSerializer(BinaryWriter writer, Property property)
+		{
+			if (writer == null) throw new ArgumentNullException(nameof(writer));
+			if (property == null) throw new ArgumentNullException(nameof(property));
+			
+			var deSerializer = GetDeSerializerFor(property, out int id);
+			if (deSerializer == null) throw new NotSupportedException(
+				$"No de/serializer registered for property '{ property.GetType().ToFriendlyString() }'");
+			
+			writer.Write((byte)id);
+			return deSerializer;
+		}
+		
+		/// <summary> Writes a full property using the specified BinaryWriter. </summary>
+		/// <exception cref="ArgumentNullException"> Thrown if the specified writer or property is null. </exception>
+		/// <exception cref="ArgumentException"> Thrown if the specified property type is not a Property type. </exception>
+		/// <exception cref="NotSupportedException"> Thrown if the specified property has no de/serializer registered. </exception>
+		public static void WriteProperty(BinaryWriter writer, Property property)
+		{
+			var deSerializer = GetAndWriteDeSerializer(writer, property);
+			deSerializer.Write(writer, property);
+		}
+		
+		
+		// Utility classes
 		
 		private class ToPropertyConverter
 		{
@@ -220,5 +324,32 @@ namespace ProperTree
 				where TProperty : Property
 				=> (Converter<TProperty, TValue>)_fromGeneric;
 		}
+	}
+	
+	/// <summary> An exception that's thrown when an error occurs
+	///           during parsing or deserialization of a property. </summary>
+	public class PropertyParseException : Exception
+	{
+		/// <summary> Gets the stream in which the parse
+		///           exception occured, or null if unavailable. </summary>
+		public Stream Stream { get; }
+		
+		/// <summary> Gets the position in the stream where the
+		///           parse exception occured, or -1 if unavailable. </summary>
+		public long Position
+			=> ((Stream != null) && Stream.CanSeek)
+				? Stream.Position : -1;
+		
+		public PropertyParseException(string message, Stream stream)
+			: this(message, stream, null) {  }
+		
+		public PropertyParseException(string message, Stream stream, Exception innerException)
+			: base(AppendStreamPosition(message, stream), innerException) { Stream = stream; }
+		
+		/// <summary> Appends the position and length of the stream to the message, if available. </summary>
+		private static string AppendStreamPosition(string message, Stream stream)
+			=> ((stream != null) && stream.CanSeek)
+				? $"{ message } (Stream pos/len: { stream.Position }/{ stream.Length })"
+				: message;
 	}
 }

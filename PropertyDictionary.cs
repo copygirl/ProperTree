@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 
 namespace ProperTree
@@ -8,7 +9,10 @@ namespace ProperTree
 	public class PropertyDictionary
 		: Property, IDictionary<string, Property>
 	{
-		private Dictionary<string, Property> _dict
+		public static readonly int MAX_SIZE = ushort.MaxValue;
+		
+		
+		private readonly Dictionary<string, Property> _dict
 			= new Dictionary<string, Property>();
 		
 		public override Property this[string name] {
@@ -18,8 +22,12 @@ namespace ProperTree
 			}
 			set {
 				if (name == null) throw new ArgumentNullException(nameof(name));
-				if (value != null) _dict.Remove(name);
-				else _dict[name] = value;
+				if (value == null)
+					_dict.Remove(name);
+				else if ((_dict.Count < MAX_SIZE) || _dict.ContainsKey(name))
+					_dict[name] = value;
+				else throw new InvalidOperationException(
+					$"PropertyDictionary can't exceed MAX_SIZE (${ MAX_SIZE })");
 			}
 		}
 		
@@ -31,6 +39,8 @@ namespace ProperTree
 		{
 			if (name == null) throw new ArgumentNullException(nameof(name));
 			if (property == null) throw new ArgumentNullException(nameof(property));
+			if (_dict.Count == MAX_SIZE) throw new InvalidOperationException(
+				$"PropertyDictionary can't exceed MAX_SIZE (${ MAX_SIZE })");
 			_dict.Add(name, property);
 		}
 		
@@ -57,7 +67,7 @@ namespace ProperTree
 			=> (other is PropertyDictionary dict)
 				&& (Count == dict.Count) && _dict.All(entry =>
 					(dict._dict.TryGetValue(entry.Key, out var value)
-						&& (value == entry.Value)));
+						&& value.Equals(entry.Value)));
 		
 		
 		// IDictionary implementation
@@ -88,7 +98,7 @@ namespace ProperTree
 		bool ICollection<KeyValuePair<string, Property>>.IsReadOnly => false;
 		
 		void ICollection<KeyValuePair<string, Property>>.Add(KeyValuePair<string, Property> value)
-			=> ((ICollection<KeyValuePair<string, Property>>)_dict).Add(value);
+			=> Add(value.Key, value.Value);
 		
 		bool ICollection<KeyValuePair<string, Property>>.Contains(KeyValuePair<string, Property> value)
 			=> ((ICollection<KeyValuePair<string, Property>>)_dict).Contains(value);
@@ -107,6 +117,35 @@ namespace ProperTree
 			=> _dict.GetEnumerator();
 		
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
+		
+		
+		// De/serializer
+		
+		public class DeSerializer : PropertyBinaryDeSerializer<PropertyDictionary>
+		{
+			public override PropertyDictionary Read(BinaryReader reader)
+			{
+				var dictionary = new PropertyDictionary();
+				var count = reader.ReadUInt16();
+				if (count > MAX_SIZE) throw new Exception(
+					$"PropertyDictionary count is larger than MAX_SIZE (${ count } > ${ MAX_SIZE })");
+				for (var i = 0; i < count; i++) {
+					var name     = reader.ReadString();
+					var property = PropertyRegistry.ReadProperty(reader);
+					dictionary.Add(name, property);
+				}
+				return dictionary;
+			}
+			
+			public override void Write(BinaryWriter writer, PropertyDictionary dictionary)
+			{
+				writer.Write((ushort)dictionary.Count);
+				foreach (var entry in dictionary) {
+					writer.Write(entry.Key);
+					PropertyRegistry.WriteProperty(writer, entry.Value);
+				}
+			}
+		}
 	}
 	
 	public static class PropertyDictionaryExtensions

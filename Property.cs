@@ -25,7 +25,7 @@ namespace ProperTree
 			if (value == null) throw new ArgumentNullException(nameof(value));
 			if (value is Property property) return property;
 			if (PropertyRegistry.TryGetToPropertyConverter<T>(out var converter)) return converter(value);
-			throw new NotSupportedException($"Can't convert to Property from type '{ typeof(T).ToFriendlyString() }'");
+			throw new NotSupportedException($"Can't convert to Property from type '{ typeof(T).ToFriendlyName() }'");
 		}
 		
 		/// <summary> Creates a Property from the specified value.
@@ -37,7 +37,7 @@ namespace ProperTree
 			if (value == null) throw new ArgumentNullException(nameof(value));
 			if (value is Property property) return property;
 			if (PropertyRegistry.TryGetToPropertyConverter(value.GetType(), out var converter)) return converter(value);
-			throw new NotSupportedException($"Can't convert to Property from type '{ value.GetType().ToFriendlyString() }'");
+			throw new NotSupportedException($"Can't convert to Property from type '{ value.GetType().ToFriendlyName() }'");
 		}
 		
 		/// <summary>
@@ -57,7 +57,7 @@ namespace ProperTree
 			if (this is T result) return result;
 			if (PropertyRegistry.TryGetFromPropertyConverter<T>(GetType(), out var converter)) return converter(this);
 			throw new NotSupportedException(
-				$"Can't convert from '{ GetType().ToFriendlyString() }' to type '{ typeof(T).ToFriendlyString() }'");
+				$"Can't convert from '{ GetType().ToFriendlyName() }' to type '{ typeof(T).ToFriendlyName() }'");
 		}
 		
 		/// <summary>
@@ -83,8 +83,8 @@ namespace ProperTree
 		/// <exception cref="ArgumentOutOfRangeException"> Thrown if the specified index is not valid. </exception>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified value is null. </exception>
 		public virtual Property this[int index] {
-			get => throw new InvalidOperationException($"Not a list Property: '{ GetType().ToFriendlyString() }'");
-			set => throw new InvalidOperationException($"Not a list Property: '{ GetType().ToFriendlyString() }'");
+			get => throw new InvalidOperationException($"Not a list Property: '{ GetType().ToFriendlyName() }'");
+			set => throw new InvalidOperationException($"Not a list Property: '{ GetType().ToFriendlyName() }'");
 		}
 		
 		/// <summary>
@@ -100,8 +100,8 @@ namespace ProperTree
 		/// <exception cref="InvalidOperationException"> Thrown if this property is not a dictionary. </exception>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified name is null. </exception>
 		public virtual Property this[string name] {
-			get => throw new InvalidOperationException($"Not a dictionary Property: '{ GetType().ToFriendlyString() }'");
-			set => throw new InvalidOperationException($"Not a dictionary Property: '{ GetType().ToFriendlyString() }'");
+			get => throw new InvalidOperationException($"Not a dictionary Property: '{ GetType().ToFriendlyName() }'");
+			set => throw new InvalidOperationException($"Not a dictionary Property: '{ GetType().ToFriendlyName() }'");
 		}
 		
 		

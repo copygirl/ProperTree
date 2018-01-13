@@ -156,7 +156,7 @@ namespace ProperTree
 		{
 			if (self == null) throw new ArgumentNullException(nameof(self));
 			if (!(self is PropertyDictionary d)) throw new InvalidOperationException(
-				$"Not a dictionary Property: '{ self.GetType().ToFriendlyString() }'");
+				$"Not a dictionary Property: '{ self.GetType().ToFriendlyName() }'");
 			return d;
 		}
 		

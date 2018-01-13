@@ -103,7 +103,7 @@ namespace ProperTree
 		public static object GetValue(this Property self)
 		{
 			if (!self.TryGetValue(out var value)) throw new InvalidOperationException(
-				$"Not a primitive Property: '{ self.GetType().ToFriendlyString() }'");
+				$"Not a primitive Property: '{ self.GetType().ToFriendlyName() }'");
 			return value;
 		}
 	}

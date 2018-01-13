@@ -71,7 +71,7 @@ namespace ProperTree
 		{
 			if (converter == null) throw new ArgumentNullException(nameof(converter));
 			if (_toPropertyConverters.TryGetValue(typeof(TFrom), out var value)) throw new InvalidOperationException(
-				$"There's already a value => property converter registered for type '{ typeof(TFrom).ToFriendlyString() }'");
+				$"There's already a value => property converter registered for type '{ typeof(TFrom).ToFriendlyName() }'");
 			_toPropertyConverters.Add(typeof(TFrom), ToPropertyConverter.Create(converter));
 		}
 		
@@ -87,7 +87,7 @@ namespace ProperTree
 			var typePair = Tuple.Create(typeof(TFromProperty), typeof(TTo));
 			if (_fromPropertyConverters.TryGetValue(typePair, out var value)) throw new InvalidOperationException(
 				"There's already a property => value converter registered for types " +
-				$"('{ typeof(TFromProperty).ToFriendlyString() }' => '{ typeof(TTo).ToFriendlyString() }')");
+				$"('{ typeof(TFromProperty).ToFriendlyName() }' => '{ typeof(TTo).ToFriendlyName() }')");
 			_fromPropertyConverters.Add(typePair, FromPropertyConverter.Create(converter));
 		}
 		
@@ -107,7 +107,7 @@ namespace ProperTree
 		public static Converter<object, Property> GetToPropertyConverter(Type valueType)
 		{
 			if (!TryGetToPropertyConverter(valueType, out var value)) throw new NotSupportedException(
-				$"No ToPropertyConverter was registered for value type '{ valueType.ToFriendlyString() }'");
+				$"No ToPropertyConverter was registered for value type '{ valueType.ToFriendlyName() }'");
 			return value;
 		}
 		
@@ -123,7 +123,7 @@ namespace ProperTree
 		public static Converter<TValue, Property> GetToPropertyConverter<TValue>()
 		{
 			if (!TryGetToPropertyConverter<TValue>(out var value)) throw new NotSupportedException(
-				$"No ToPropertyConverter was registered for value type '{ typeof(TValue).ToFriendlyString() }'");
+				$"No ToPropertyConverter was registered for value type '{ typeof(TValue).ToFriendlyName() }'");
 			return value;
 		}
 		
@@ -150,7 +150,7 @@ namespace ProperTree
 		{
 			if (!TryGetFromPropertyConverter<TValue>(propertyType, out var value)) throw new NotSupportedException(
 				$"No FromPropertyConverter was registered for value type '{ typeof(TValue) }' " +
-				$"and property type '{ propertyType.ToFriendlyString() }'");
+				$"and property type '{ propertyType.ToFriendlyName() }'");
 			return value;
 		}
 		
@@ -169,8 +169,8 @@ namespace ProperTree
 			where TProperty : Property
 		{
 			if (!TryGetFromPropertyConverter<TValue, TProperty>(out var value)) throw new NotSupportedException(
-				$"No FromPropertyConverter was registered for value type '{ typeof(TValue).ToFriendlyString() }' " +
-				$"and property type '{ typeof(TProperty).ToFriendlyString() }'");
+				$"No FromPropertyConverter was registered for value type '{ typeof(TValue).ToFriendlyName() }' " +
+				$"and property type '{ typeof(TProperty).ToFriendlyName() }'");
 			return value;
 		}
 		
@@ -188,7 +188,7 @@ namespace ProperTree
 				$"The ID { id } is not within the valid range ({ MIN_ID } - { MAX_ID })");
 			if (deSerializer == null) throw new ArgumentNullException(nameof(deSerializer));
 			if (_binaryDeSerializersByID[id] != null) throw new InvalidOperationException(
-				$"The ID { id } is already in use by de/serializer '{ _binaryDeSerializersByID[id].GetType().ToFriendlyString() }'");
+				$"The ID { id } is already in use by de/serializer '{ _binaryDeSerializersByID[id].GetType().ToFriendlyName() }'");
 			
 			_binaryDeSerializersByID[id] = deSerializer;
 			_binaryDeSerializersByType.Add(typeof(TProperty),
@@ -252,7 +252,7 @@ namespace ProperTree
 			try { return deSerializer.Read(reader); }
 			catch (PropertyParseException) { throw; }
 			catch (Exception ex) {
-				var propertyName = deSerializer.PropertyType.ToFriendlyString();
+				var propertyName = deSerializer.PropertyType.ToFriendlyName();
 				throw new PropertyParseException(
 					$"Exception while reading property '{ propertyName }': { ex.Message }",
 					reader.BaseStream, ex);
@@ -268,7 +268,7 @@ namespace ProperTree
 			
 			var deSerializer = GetDeSerializerFor(property, out int id);
 			if (deSerializer == null) throw new NotSupportedException(
-				$"No de/serializer registered for property '{ property.GetType().ToFriendlyString() }'");
+				$"No de/serializer registered for property '{ property.GetType().ToFriendlyName() }'");
 			
 			writer.Write((byte)id);
 			return deSerializer;

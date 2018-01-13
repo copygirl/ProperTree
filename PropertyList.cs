@@ -160,7 +160,7 @@ namespace ProperTree
 		{
 			if (self == null) throw new ArgumentNullException(nameof(self));
 			if (!(self is PropertyList l)) throw new InvalidOperationException(
-				$"Not a list Property: '{ self.GetType().ToFriendlyString() }'");
+				$"Not a list Property: '{ self.GetType().ToFriendlyName() }'");
 			return l;
 		}
 		

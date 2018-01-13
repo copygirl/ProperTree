@@ -27,7 +27,7 @@ namespace ProperTree
 				else if ((_dict.Count < MAX_SIZE) || _dict.ContainsKey(name))
 					_dict[name] = value;
 				else throw new InvalidOperationException(
-					$"PropertyDictionary can't exceed MAX_SIZE (${ MAX_SIZE })");
+					$"PropertyDictionary can't exceed MAX_SIZE ({ MAX_SIZE })");
 			}
 		}
 		
@@ -40,7 +40,7 @@ namespace ProperTree
 			if (name == null) throw new ArgumentNullException(nameof(name));
 			if (property == null) throw new ArgumentNullException(nameof(property));
 			if (_dict.Count == MAX_SIZE) throw new InvalidOperationException(
-				$"PropertyDictionary can't exceed MAX_SIZE (${ MAX_SIZE })");
+				$"PropertyDictionary can't exceed MAX_SIZE ({ MAX_SIZE })");
 			_dict.Add(name, property);
 		}
 		
@@ -128,7 +128,7 @@ namespace ProperTree
 				var dictionary = new PropertyDictionary();
 				var count = reader.ReadUInt16();
 				if (count > MAX_SIZE) throw new Exception(
-					$"PropertyDictionary count is larger than MAX_SIZE (${ count } > ${ MAX_SIZE })");
+					$"PropertyDictionary count is larger than MAX_SIZE ({ count } > { MAX_SIZE })");
 				for (var i = 0; i < count; i++) {
 					var name     = reader.ReadString();
 					var property = PropertyRegistry.ReadProperty(reader);

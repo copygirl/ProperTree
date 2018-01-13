@@ -46,7 +46,7 @@ namespace ProperTree
 				throw new ArgumentOutOfRangeException(nameof(index));
 			if (property == null) throw new ArgumentNullException(nameof(property));
 			if (_list.Count == MAX_SIZE) throw new InvalidOperationException(
-				$"PropertyList can't exceed MAX_SIZE (${ MAX_SIZE })");
+				$"PropertyList can't exceed MAX_SIZE ({ MAX_SIZE })");
 			_list.Insert(index, property);
 		}
 		
@@ -136,7 +136,7 @@ namespace ProperTree
 				var list = new PropertyList();
 				var count = reader.ReadUInt16();
 				if (count > MAX_SIZE) throw new Exception(
-					$"PropertyList count is larger than MAX_SIZE (${ count } > ${ MAX_SIZE })");
+					$"PropertyList count is larger than MAX_SIZE ({ count } > { MAX_SIZE })");
 				list._list.Capacity = count;
 				for (var i = 0; i < count; i++)
 					list.Add(PropertyRegistry.ReadProperty(reader));

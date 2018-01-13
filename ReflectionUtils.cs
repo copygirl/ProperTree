@@ -25,13 +25,15 @@ namespace ProperTree
 		///   Examples:
 		///   <code>
 		/// var b = typeof(byte);
+		/// b.Name == "Byte"
 		/// b.ToString() == "System.Byte"
 		/// b.ToFriendlyString() = "byte"
 		/// 
 		/// var f = typeof(Func&lt;byte&gt;);
-		/// f.ToString() == "System.Func`1"
+		/// f.Name == "Func`1"
+		/// f.ToString() == "System.Func`1[System.Byte]"
 		/// f.ToFriendlyString() == "Func&lt;byte&gt;"
-		/// f.ToFriendlyString(true) == "System.Func&lt;System.Byte&gt;";
+		/// f.ToFriendlyString(true) == "System.Func&lt;System.Byte&gt;"
 		///   </code>
 		/// </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified type is null. </exception>
@@ -44,11 +46,11 @@ namespace ProperTree
 			if (type.IsArray)
 				return $"{ type.GetElementType().ToFriendlyString(full) }[{ new string(',', type.GetArrayRank() - 1) }]";
 			
-			var name = full ? type.FullName : type.Name;
+			var name = full ? type.ToString() : type.Name;
 			if (!type.IsGenericType) return name;
 			
 			var typeArgumentNames = type.GenericTypeArguments.Select(t => ToFriendlyString(t, full));
-			return $"{ name.Substring(0, name.LastIndexOf('`')) }<{ string.Join(",", typeArgumentNames) }>";
+			return $"{ name.Substring(0, name.IndexOf('`')) }<{ string.Join(",", typeArgumentNames) }>";
 		}
 	}
 }

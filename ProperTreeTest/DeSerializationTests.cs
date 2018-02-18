@@ -2,6 +2,7 @@ using System;
 using System.IO;
 using System.Text;
 using ProperTree;
+using ProperTree.Serialization;
 using Xunit;
 
 namespace ProperTreeTest

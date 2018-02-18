@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using ProperTree.Utility;
 
 namespace ProperTree
 {

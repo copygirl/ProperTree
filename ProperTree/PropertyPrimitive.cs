@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ProperTree.Serialization;
+using ProperTree.Utility;
 
 namespace ProperTree
 {

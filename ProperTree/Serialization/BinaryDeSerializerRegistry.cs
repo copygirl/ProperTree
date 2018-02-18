@@ -1,8 +1,9 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using ProperTree.Utility;
 
-namespace ProperTree
+namespace ProperTree.Serialization
 {
 	public static class BinaryDeSerializerRegistry
 	{

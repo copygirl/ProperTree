@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace ProperTree
+namespace ProperTree.Serialization
 {
 	/// <summary> An exception that's thrown when an error occurs
 	///           during parsing or deserialization of a property. </summary>

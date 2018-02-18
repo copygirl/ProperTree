@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace ProperTree
+namespace ProperTree.Utility
 {
 	public static class ReflectionUtils
 	{

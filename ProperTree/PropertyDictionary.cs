@@ -3,6 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using ProperTree.Serialization;
+using ProperTree.Utility;
 
 namespace ProperTree
 {

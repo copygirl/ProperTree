@@ -1,7 +1,7 @@
 using System;
 using System.IO;
 
-namespace ProperTree
+namespace ProperTree.Serialization
 {
 	public abstract class BinaryDeSerializer<TProperty>
 			: IBinaryDeSerializer

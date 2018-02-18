@@ -35,11 +35,11 @@ namespace ProperTreeTest
 			var stream = new MemoryStream();
 			
 			var writer = new BinaryWriter(stream, Encoding.UTF8);
-			PropertyRegistry.WriteProperty(writer, dict);
+			BinaryDeSerializerRegistry.WriteProperty(writer, dict);
 			stream.Position = 0;
 			
 			var reader = new BinaryReader(stream, Encoding.UTF8);
-			var readDict = PropertyRegistry.ReadProperty(reader);
+			var readDict = BinaryDeSerializerRegistry.ReadProperty(reader);
 			
 			Assert.Equal(dict, readDict);
 		}

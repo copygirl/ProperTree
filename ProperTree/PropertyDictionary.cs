@@ -121,7 +121,7 @@ namespace ProperTree
 		
 		// De/serializer
 		
-		public class DeSerializer : PropertyBinaryDeSerializer<PropertyDictionary>
+		public class DeSerializer : BinaryDeSerializer<PropertyDictionary>
 		{
 			public override PropertyDictionary Read(BinaryReader reader)
 			{
@@ -131,7 +131,7 @@ namespace ProperTree
 					$"PropertyDictionary count is larger than MAX_SIZE ({ count } > { MAX_SIZE })");
 				for (var i = 0; i < count; i++) {
 					var name     = reader.ReadString();
-					var property = PropertyRegistry.ReadProperty(reader);
+					var property = BinaryDeSerializerRegistry.ReadProperty(reader);
 					dictionary.Add(name, property);
 				}
 				return dictionary;
@@ -142,7 +142,7 @@ namespace ProperTree
 				writer.Write((ushort)dictionary.Count);
 				foreach (var entry in dictionary) {
 					writer.Write(entry.Key);
-					PropertyRegistry.WriteProperty(writer, entry.Value);
+					BinaryDeSerializerRegistry.WriteProperty(writer, entry.Value);
 				}
 			}
 		}

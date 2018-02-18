@@ -24,9 +24,9 @@ namespace ProperTree
 		
 		public static void RegisterConverters()
 		{
-			PropertyRegistry.RegisterToPropertyConverter(
+			PropertyConverterRegistry.RegisterToProperty(
 				(T[] value) => new PropertyArray<T>(value));
-			PropertyRegistry.RegisterFromPropertyConverter(
+			PropertyConverterRegistry.RegisterFromProperty(
 				(PropertyArray<T> property) => property.Array);
 		}
 		
@@ -39,11 +39,11 @@ namespace ProperTree
 		
 		// TODO: Use protobuf to write these?
 		public class DeSerializer
-			: PropertyBinaryDeSerializer<PropertyArray<T>>
+			: BinaryDeSerializer<PropertyArray<T>>
 		{
 			private readonly PropertyPrimitive<T>.DeSerializer _primitiveDeSerializer
-				= (PropertyPrimitive<T>.DeSerializer)PropertyRegistry
-					.GetDeSerializerByType<PropertyPrimitive<T>>(out var _);
+				= (PropertyPrimitive<T>.DeSerializer)BinaryDeSerializerRegistry
+					.GetByType<PropertyPrimitive<T>>(out var _);
 			
 			public override PropertyArray<T> Read(BinaryReader reader)
 			{
@@ -70,7 +70,7 @@ namespace ProperTree
 	}
 	
 	public class PropertyByteArrayDeSerializer
-		: PropertyBinaryDeSerializer<PropertyArray<byte>>
+		: BinaryDeSerializer<PropertyArray<byte>>
 	{
 		public override PropertyArray<byte> Read(BinaryReader reader)
 		{

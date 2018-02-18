@@ -37,9 +37,9 @@ namespace ProperTree
 		
 		public static void RegisterConverters()
 		{
-			PropertyRegistry.RegisterToPropertyConverter(
+			PropertyConverterRegistry.RegisterToProperty(
 				(T value) => new PropertyPrimitive<T>(value));
-			PropertyRegistry.RegisterFromPropertyConverter(
+			PropertyConverterRegistry.RegisterFromProperty(
 				(PropertyPrimitive<T> property) => property.Value);
 		}
 		
@@ -51,7 +51,7 @@ namespace ProperTree
 		object IPropertyPrimitive.Value => Value;
 		
 		
-		public class DeSerializer : PropertyBinaryDeSerializer<PropertyPrimitive<T>>
+		public class DeSerializer : BinaryDeSerializer<PropertyPrimitive<T>>
 		{
 			public Func<BinaryReader, T> ReadFunction { get; }
 			public Action<BinaryWriter, T> WriteFunction { get; }

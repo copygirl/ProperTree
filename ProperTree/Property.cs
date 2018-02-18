@@ -5,13 +5,17 @@ using System.Collections.Generic;
 namespace ProperTree
 {
 	/// <summary>
-	///   Base class for all Property classes. Used to store additional, extensible
-	///   information on game objects in a common format that can be easily and
-	///   compactly read from and written to file and network streams.
+	///   Base class for all Property classes. Used to store additional,
+	///   extensible information on game objects in a common format that
+	///   can be easily and compactly read from and written to file and
+	///   network streams.
 	///   
-	///   <see cref="PropertyRegistry"/> is used to register default and custom
-	///   Property types which can then be used to represent pre-defined data
-	///   types and structures.
+	///   <see cref="PropertyConverterRegistry"/> is used to register
+	///   default and custom Property converters which is what powers
+	///   the <see cref="As"/> and <see cref="Of"/> methods.
+	///   
+	///   <see cref="BinaryDeSerializerRegisty"/> is used to register
+	///   de/serializers, which read/write Properties from/to streams.
 	/// </summary>
 	public abstract class Property
 		: IEquatable<Property>
@@ -24,7 +28,7 @@ namespace ProperTree
 		{
 			if (value == null) throw new ArgumentNullException(nameof(value));
 			if (value is Property property) return property;
-			if (PropertyRegistry.TryGetToPropertyConverter<T>(out var converter)) return converter(value);
+			if (PropertyConverterRegistry.TryGetToProperty<T>(out var converter)) return converter(value);
 			throw new NotSupportedException($"Can't convert to Property from type '{ typeof(T).ToFriendlyName() }'");
 		}
 		
@@ -36,7 +40,7 @@ namespace ProperTree
 		{
 			if (value == null) throw new ArgumentNullException(nameof(value));
 			if (value is Property property) return property;
-			if (PropertyRegistry.TryGetToPropertyConverter(value.GetType(), out var converter)) return converter(value);
+			if (PropertyConverterRegistry.TryGetToProperty(value.GetType(), out var converter)) return converter(value);
 			throw new NotSupportedException($"Can't convert to Property from type '{ value.GetType().ToFriendlyName() }'");
 		}
 		
@@ -55,7 +59,7 @@ namespace ProperTree
 		public T As<T>()
 		{
 			if (this is T result) return result;
-			if (PropertyRegistry.TryGetFromPropertyConverter<T>(GetType(), out var converter)) return converter(this);
+			if (PropertyConverterRegistry.TryGetFromProperty<T>(GetType(), out var converter)) return converter(this);
 			throw new NotSupportedException(
 				$"Can't convert from '{ GetType().ToFriendlyName() }' to type '{ typeof(T).ToFriendlyName() }'");
 		}
@@ -75,7 +79,7 @@ namespace ProperTree
 		/// </summary>
 		public T As<T>(T @default)
 			=> (this is T result) ? result
-				: PropertyRegistry.TryGetFromPropertyConverter<T>(GetType(), out var converter)
+				: PropertyConverterRegistry.TryGetFromProperty<T>(GetType(), out var converter)
 					? converter(this) : @default;
 		
 		/// <summary> Gets or sets the property at the specified index of this list property. </summary>

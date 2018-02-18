@@ -1,8 +1,7 @@
 using System;
-using ProperTree;
 using Xunit;
 
-namespace ProperTreeTest
+namespace ProperTree.Tests
 {
 	public class PrimitiveTests
 	{

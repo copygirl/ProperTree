@@ -6,14 +6,14 @@
 		"type": "shell",
 		"command": "dotnet build -c Debug",
 		"linux": { "options": { "env": { "FrameworkPathOverride": "/lib/mono/4.5.2-api/" } } },
-
+		
 		"presentation": { "reveal": "silent" },
 		"problemMatcher": "$msCompile",
 	},{
 		"label": "test",
 		"group": { "kind": "test", "isDefault": true },
 		"type": "shell",
-		"command": "dotnet test ProperTreeTest",
+		"command": "dotnet test ProperTree.Tests",
 		"linux": { "options": { "env": { "FrameworkPathOverride": "/lib/mono/4.5.2-api/" } } },
 	}]
 }

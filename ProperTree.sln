@@ -5,7 +5,7 @@ VisualStudioVersion = 15.0.26124.0
 MinimumVisualStudioVersion = 15.0.26124.0
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProperTree", "ProperTree\ProperTree.csproj", "{89B83B87-8B36-4073-8E03-477D46073938}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProperTreeTest", "ProperTreeTest\ProperTreeTest.csproj", "{B052F523-9EFF-4BCA-99FD-2078ACE977AB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProperTree.Tests", "ProperTree.Tests\ProperTreeTests.csproj", "{B052F523-9EFF-4BCA-99FD-2078ACE977AB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

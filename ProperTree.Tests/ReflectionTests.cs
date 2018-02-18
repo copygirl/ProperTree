@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using ProperTree.Utility;
 using Xunit;
 
-namespace ProperTreeTest
+namespace ProperTree.Tests
 {
 	public class ReflectionTests
 	{

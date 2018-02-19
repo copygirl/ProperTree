@@ -12,10 +12,10 @@ namespace ProperTree
 	///   network streams.
 	///   
 	///   <see cref="PropertyConverterRegistry"/> is used to register
-	///   default and custom Property converters which is what powers
+	///   default and custom Property converters, which are what powers
 	///   the <see cref="As"/> and <see cref="Of"/> methods.
 	///   
-	///   <see cref="BinaryDeSerializerRegisty"/> is used to register
+	///   <see cref="BinaryDeSerializerRegisty"/> is used for binary
 	///   de/serializers, which read/write Properties from/to streams.
 	/// </summary>
 	public abstract class Property
@@ -48,13 +48,15 @@ namespace ProperTree
 		/// <summary>
 		///   Converts or casts this Property to the specified type.
 		///   
-		///   Note that this works as an extension of the "as" operator:
+		///   Note that this works as an extension of the "as" operator,
+		///   if no conversion to the specified type has been registered.
 		///   <code>
 		/// property.As&lt;PropertyList&gt;() == (property as PropertyList)
 		/// property.As&lt;object&gt;() == (property as object)
-		/// // To get any primitive property's underlying value:
-		/// var value = property.GetValue();
 		///   </code>
+		///   
+		///   To get any primitive property's underlying value, use
+		///   <see cref="PropertyPrimitiveExtensions.GetValue"/>.
 		/// </summary>
 		/// <exception cref="NotSupportedException"> Thrown if the specified property can't be converted to the specified type. </exception>
 		public T As<T>()
@@ -69,14 +71,15 @@ namespace ProperTree
 		///   Converts or casts this Property to the specified type, or the
 		///   specified default value if the conversion did not succeed.
 		///   
-		///   Note that this works as an extension of the "as" operator:
+		///   Note that this works as an extension of the "as" operator,
+		///   if no conversion to the specified type has been registered.
 		///   <code>
 		/// property.As(new PropertyList()) == (property as PropertyList) ?? new PropertyList()
 		/// property.As(null) == (property as object) ?? null
-		/// 
-		/// // To get any primitive property's underlying value:
-		/// if (property.TryGetValue(out var value)) { ... }
 		///   </code>
+		///   
+		///   To get any primitive property's underlying value, use
+		///   <see cref="PropertyPrimitiveExtensions.TryGetValue"/>.
 		/// </summary>
 		public T As<T>(T @default)
 			=> (this is T result) ? result

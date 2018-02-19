@@ -25,7 +25,8 @@ namespace ProperTree
 	/// Console.WriteLine($"Value: { rnd.GetValue() }");
 	///   </code>
 	/// </summary>
-	public class PropertyPrimitive<T> : Property, IPropertyPrimitive
+	public class PropertyPrimitive<T>
+		: Property, IPropertyPrimitive
 	{
 		/// <summary>
 		///   Gets the underlying value of this primitive property.
@@ -34,7 +35,7 @@ namespace ProperTree
 		/// </summary>
 		public T Value { get; protected set; }
 		
-		protected PropertyPrimitive(T value)
+		internal PropertyPrimitive(T value)
 			=> Value = value;
 		
 		public static void RegisterConverters()
@@ -51,26 +52,6 @@ namespace ProperTree
 		
 		// IPropertyPrimitive implementation
 		object IPropertyPrimitive.Value => Value;
-		
-		
-		public class DeSerializer : BinaryDeSerializer<PropertyPrimitive<T>>
-		{
-			public Func<BinaryReader, T> ReadFunction { get; }
-			public Action<BinaryWriter, T> WriteFunction { get; }
-			
-			public DeSerializer(Func<BinaryReader, T> read,
-			                    Action<BinaryWriter, T> write)
-			{
-				ReadFunction  = read;
-				WriteFunction = write;
-			}
-			
-			public override PropertyPrimitive<T> Read(BinaryReader reader)
-				=> new PropertyPrimitive<T>(ReadFunction(reader));
-			
-			public override void Write(BinaryWriter writer, PropertyPrimitive<T> property)
-				=> WriteFunction(writer, property.Value);
-		}
 	}
 	
 	public interface IPropertyPrimitive

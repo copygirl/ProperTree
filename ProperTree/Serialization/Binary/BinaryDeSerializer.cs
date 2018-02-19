@@ -1,10 +1,10 @@
 using System;
 using System.IO;
 
-namespace ProperTree.Serialization
+namespace ProperTree.Serialization.Binary
 {
 	public abstract class BinaryDeSerializer<TProperty>
-			: IBinaryDeSerializer
+		: IBinaryDeSerializer
 		where TProperty : Property
 	{
 		public abstract TProperty Read(BinaryReader reader);

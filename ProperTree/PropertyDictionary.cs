@@ -119,35 +119,6 @@ namespace ProperTree
 			=> _dict.GetEnumerator();
 		
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-		
-		
-		// De/serializer
-		
-		public class DeSerializer : BinaryDeSerializer<PropertyDictionary>
-		{
-			public override PropertyDictionary Read(BinaryReader reader)
-			{
-				var dictionary = new PropertyDictionary();
-				var count = reader.ReadUInt16();
-				if (count > MAX_SIZE) throw new Exception(
-					$"PropertyDictionary count is larger than MAX_SIZE ({ count } > { MAX_SIZE })");
-				for (var i = 0; i < count; i++) {
-					var name     = reader.ReadString();
-					var property = BinaryDeSerializerRegistry.ReadProperty(reader);
-					dictionary.Add(name, property);
-				}
-				return dictionary;
-			}
-			
-			public override void Write(BinaryWriter writer, PropertyDictionary dictionary)
-			{
-				writer.Write((ushort)dictionary.Count);
-				foreach (var entry in dictionary) {
-					writer.Write(entry.Key);
-					BinaryDeSerializerRegistry.WriteProperty(writer, entry.Value);
-				}
-			}
-		}
 	}
 	
 	public static class PropertyDictionaryExtensions

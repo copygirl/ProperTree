@@ -14,7 +14,7 @@ namespace ProperTree
 		public static readonly int MAX_SIZE = ushort.MaxValue;
 		
 		
-		private readonly List<Property> _list = new List<Property>();
+		private readonly List<Property> _list;
 		
 		public override Property this[int index] {
 			get => _list[index];
@@ -23,6 +23,12 @@ namespace ProperTree
 				_list[index] = value;
 			}
 		}
+		
+		internal PropertyList(List<Property> list)
+			=> _list = list;
+		public PropertyList()
+			: this(new List<Property>()) {  }
+		
 		
 		/// <summary> Adds the specified property to the end of this list property. </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified property is null. </exception>
@@ -126,32 +132,6 @@ namespace ProperTree
 			=> _list.GetEnumerator();
 		
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
-		
-		
-		// De/serializer
-		
-		public class DeSerializer
-			: BinaryDeSerializer<PropertyList>
-		{
-			public override PropertyList Read(BinaryReader reader)
-			{
-				var list = new PropertyList();
-				var count = reader.ReadUInt16();
-				if (count > MAX_SIZE) throw new Exception(
-					$"PropertyList count is larger than MAX_SIZE ({ count } > { MAX_SIZE })");
-				list._list.Capacity = count;
-				for (var i = 0; i < count; i++)
-					list.Add(BinaryDeSerializerRegistry.ReadProperty(reader));
-				return list;
-			}
-			
-			public override void Write(BinaryWriter writer, PropertyList list)
-			{
-				writer.Write((ushort)list.Count);
-				foreach (var property in list)
-					BinaryDeSerializerRegistry.WriteProperty(writer, property);
-			}
-		}
 	}
 	
 	public static class ProperlyListExtensions

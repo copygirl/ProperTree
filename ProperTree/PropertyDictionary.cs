@@ -65,6 +65,8 @@ namespace ProperTree
 		}
 		
 		
+		// IEquatable implementation
+		
 		public override bool Equals(Property other)
 			=> (other is PropertyDictionary dict)
 				&& (Count == dict.Count) && _dict.All(entry =>
@@ -95,6 +97,7 @@ namespace ProperTree
 		/// <summary> Clears all entries from this dictionary property. </summary>
 		public void Clear() => _dict.Clear();
 		
+		
 		// ICollection implementation
 		
 		bool ICollection<KeyValuePair<string, Property>>.IsReadOnly => false;
@@ -110,6 +113,7 @@ namespace ProperTree
 		
 		void ICollection<KeyValuePair<string, Property>>.CopyTo(KeyValuePair<string, Property>[] array, int arrayIndex)
 			=> ((ICollection<KeyValuePair<string, Property>>)_dict).CopyTo(array, arrayIndex);
+		
 		
 		// IEnumerable implementation
 		

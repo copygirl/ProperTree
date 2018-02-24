@@ -80,6 +80,8 @@ namespace ProperTree
 		}
 		
 		
+		// IEquatable implementation
+		
 		public override bool Equals(Property other)
 			=> (other is PropertyList list)
 				&& _list.SequenceEqual(list._list);
@@ -117,12 +119,14 @@ namespace ProperTree
 		public void Clear()
 			=> _list.Clear();
 		
+		
 		// ICollection implementation
 		
 		bool ICollection<Property>.IsReadOnly => false;
 		
 		void ICollection<Property>.CopyTo(Property[] array, int arrayIndex)
 			=> _list.CopyTo(array, arrayIndex);
+		
 		
 		// IEnumerable implementation
 		

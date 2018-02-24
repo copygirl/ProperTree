@@ -31,6 +31,9 @@ namespace ProperTree
 				(PropertyArray<T> property) => property.Array);
 		}
 		
+		
+		// IEquatable implementation
+		
 		public override bool Equals(Property property)
 			=> (property is PropertyArray<T> array)
 				&& Array.SequenceEqual(array.Array);

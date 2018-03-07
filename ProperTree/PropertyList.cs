@@ -9,14 +9,14 @@ using ProperTree.Utility;
 namespace ProperTree
 {
 	public class PropertyList
-		: Property, IList<Property>
+		: IProperty, IList<IProperty>
 	{
 		public static readonly int MAX_SIZE = ushort.MaxValue;
 		
 		
-		private readonly List<Property> _list;
+		private readonly List<IProperty> _list;
 		
-		public override Property this[int index] {
+		public IProperty this[int index] {
 			get => _list[index];
 			set {
 				if (value == null) throw new ArgumentNullException(nameof(value));
@@ -24,21 +24,26 @@ namespace ProperTree
 			}
 		}
 		
-		internal PropertyList(List<Property> list)
+		public IProperty this[string name] {
+			get => throw new InvalidOperationException($"Not a dictionary property: '{ GetType().ToFriendlyName() }'");
+			set => throw new InvalidOperationException($"Not a dictionary property: '{ GetType().ToFriendlyName() }'");
+		}
+		
+		internal PropertyList(List<IProperty> list)
 			=> _list = list;
 		public PropertyList()
-			: this(new List<Property>()) {  }
+			: this(new List<IProperty>()) {  }
 		
 		
 		/// <summary> Adds the specified property to the end of this list property. </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified property is null. </exception>
 		/// <exception cref="InvalidOperationException"> Thrown if this list property's size is already at <see cref="MAX_SIZE"/>. </exception>
-		public void Add(Property property)
+		public void Add(IProperty property)
 			=> Insert(Count, property);
 		
 		/// <summary> Adds the specified value to the end of this list property. </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified value is null. </exception>
-		/// <exception cref="NotSupportedException"> Thrown if the specified value can't be converted to a Property. </exception>
+		/// <exception cref="NotSupportedException"> Thrown if the specified value can't be converted to an <see cref="IProperty"/>. </exception>
 		/// <exception cref="InvalidOperationException"> Thrown if this list property's size is already at <see cref="MAX_SIZE"/>. </exception>
 		public void Add<T>(T value)
 			=> Add(Property.Of(value));
@@ -47,7 +52,7 @@ namespace ProperTree
 		/// <exception cref="ArgumentOutOfRangeException"> Thrown if the specified index is not valid. </exception>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified property is null. </exception>
 		/// <exception cref="InvalidOperationException"> Thrown if this list property's size is already at <see cref="MAX_SIZE"/>. </exception>
-		public void Insert(int index, Property property)
+		public void Insert(int index, IProperty property)
 		{
 			var count = _list?.Count ?? 0;
 			if ((index < 0) || (index > count))
@@ -68,7 +73,7 @@ namespace ProperTree
 		
 		/// <summary> Removes the child at the specified index from this list property, and returns the removed value. </summary>
 		/// <exception cref="ArgumentOutOfRangeException"> Thrown if the specified index is not valid. </exception>
-		public Property RemoveAt(int index)
+		public IProperty RemoveAt(int index)
 		{
 			var count = _list?.Count ?? 0;
 			if ((index < 0) || (index >= count))
@@ -76,13 +81,13 @@ namespace ProperTree
 			
 			var value = _list[index];
 			_list.RemoveAt(index);
-			return (Property)value;
+			return (IProperty)value;
 		}
 		
 		
 		// IEquatable implementation
 		
-		public override bool Equals(Property other)
+		public bool Equals(IProperty other)
 			=> (other is PropertyList list)
 				&& _list.SequenceEqual(list._list);
 		
@@ -94,21 +99,21 @@ namespace ProperTree
 		
 		/// <summary> Returns the index of a specific property
 		///           in this list property, or -1 if not found. </summary>
-		public int IndexOf(Property property)
+		public int IndexOf(IProperty property)
 			=> _list.IndexOf(property);
 		
 		/// <summary> Returns if a specific property exists in this list property. </summary>
-		public bool Contains(Property property)
+		public bool Contains(IProperty property)
 			=> (IndexOf(property) >= 0);
 		
 		/// <summary> Removes the child at the specified index from this list property. </summary>
 		/// <exception cref="ArgumentOutOfRangeException"> Thrown if the specified index is not valid. </exception>
-		void IList<Property>.RemoveAt(int index)
+		void IList<IProperty>.RemoveAt(int index)
 			=> RemoveAt(index);
 		
 		/// <summary> Removes the the first occurance of a specific property
 		///           from this list property, returning if successful. </summary>
-		public bool Remove(Property property)
+		public bool Remove(IProperty property)
 		{
 			var index = IndexOf(property);
 			if (index >= 0) RemoveAt(index);
@@ -122,9 +127,9 @@ namespace ProperTree
 		
 		// ICollection implementation
 		
-		bool ICollection<Property>.IsReadOnly => false;
+		bool ICollection<IProperty>.IsReadOnly => false;
 		
-		void ICollection<Property>.CopyTo(Property[] array, int arrayIndex)
+		void ICollection<IProperty>.CopyTo(IProperty[] array, int arrayIndex)
 			=> _list.CopyTo(array, arrayIndex);
 		
 		
@@ -132,7 +137,7 @@ namespace ProperTree
 		
 		/// <summary> Returns an enumerator that iterates
 		///           over the elements in this list property. </summary>
-		public IEnumerator<Property> GetEnumerator()
+		public IEnumerator<IProperty> GetEnumerator()
 			=> _list.GetEnumerator();
 		
 		IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
@@ -142,7 +147,7 @@ namespace ProperTree
 	{
 		// TODO: Add "TryAdd" and similar methods.
 		
-		private static PropertyList AsList(this Property self)
+		private static PropertyList AsList(this IProperty self)
 		{
 			if (self == null) throw new ArgumentNullException(nameof(self));
 			if (!(self is PropertyList l)) throw new InvalidOperationException(
@@ -156,7 +161,7 @@ namespace ProperTree
 		///   -OR- if this list property's size is already at <see cref="PropertyList.MAX_SIZE"/>.
 		/// </exception>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified list or property is null. </exception>
-		public static void Add(this Property self, Property property)
+		public static void Add(this IProperty self, IProperty property)
 			=> self.AsList().Add(property);
 		
 		/// <summary> Adds the specified value to the end of the specified list property. </summary>
@@ -165,8 +170,8 @@ namespace ProperTree
 		///   -OR- if this list property's size is already at <see cref="PropertyList.MAX_SIZE"/>.
 		/// </exception>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified list or value is null. </exception>
-		/// <exception cref="NotSupportedException"> Thrown if the specified value can't be converted to a Property. </exception>
-		public static void Add<T>(this Property self, T value)
+		/// <exception cref="NotSupportedException"> Thrown if the specified value can't be converted to an <see cref="IProperty"/>. </exception>
+		public static void Add<T>(this IProperty self, T value)
 			=> self.AsList().Add(value);
 		
 		/// <summary> Inserts the specified property at the specified index in the specified list property. </summary>
@@ -176,7 +181,7 @@ namespace ProperTree
 		/// </exception>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified list or property is null. </exception>
 		/// <exception cref="ArgumentOutOfRangeException"> Thrown if the specified index is not valid. </exception>
-		public static void Insert(this Property self, int index, Property property)
+		public static void Insert(this IProperty self, int index, IProperty property)
 			=> self.AsList().Insert(index, property);
 		
 		/// <summary> Inserts the specified value at the specified index in the specified list property. </summary>
@@ -186,15 +191,15 @@ namespace ProperTree
 		/// </exception>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified list or value is null. </exception>
 		/// <exception cref="ArgumentOutOfRangeException"> Thrown if the specified index is not valid. </exception>
-		/// <exception cref="NotSupportedException"> Thrown if the specified value can't be converted to a Property. </exception>
-		public static void Insert<T>(this Property self, int index, T value)
+		/// <exception cref="NotSupportedException"> Thrown if the specified value can't be converted to an <see cref="IProperty"/>. </exception>
+		public static void Insert<T>(this IProperty self, int index, T value)
 			=> self.AsList().Insert(index, value);
 		
 		/// <summary> Removes the child at the specified index from the specified list property, and returns the removed value. </summary>
 		/// <exception cref="InvalidOperationException"> Thrown if the specified list is not actually a list. </exception>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified list is null. </exception>
 		/// <exception cref="ArgumentOutOfRangeException"> Thrown if the specified index is not valid. </exception>
-		public static Property RemoveAt(this Property self, int index)
+		public static IProperty RemoveAt(this IProperty self, int index)
 			=> self.AsList().RemoveAt(index);
 	}
 }

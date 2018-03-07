@@ -26,14 +26,25 @@ namespace ProperTree
 	///   </code>
 	/// </summary>
 	public class PropertyPrimitive<T>
-		: Property, IPropertyPrimitive
+		: IProperty, IPropertyPrimitive
 	{
 		/// <summary>
 		///   Gets the underlying value of this primitive property.
+		///   
 		///   <seealso cref="Property.As{T}"/>
 		///   <seealso cref="PropertyPrimitiveExtensions.GetValue"/>
 		/// </summary>
 		public T Value { get; protected set; }
+		
+		public IProperty this[int index] {
+			get => throw new InvalidOperationException($"Not a list property: '{ GetType().ToFriendlyName() }'");
+			set => throw new InvalidOperationException($"Not a list property: '{ GetType().ToFriendlyName() }'");
+		}
+		
+		public IProperty this[string name] {
+			get => throw new InvalidOperationException($"Not a dictionary property: '{ GetType().ToFriendlyName() }'");
+			set => throw new InvalidOperationException($"Not a dictionary property: '{ GetType().ToFriendlyName() }'");
+		}
 		
 		internal PropertyPrimitive(T value)
 			=> Value = value;
@@ -46,7 +57,7 @@ namespace ProperTree
 				(PropertyPrimitive<T> property) => property.Value);
 		}
 		
-		public override bool Equals(Property other)
+		public bool Equals(IProperty other)
 			=> (other is PropertyPrimitive<T> primitive)
 				&& EqualityComparer<T>.Default.Equals(Value, primitive.Value);
 		
@@ -68,7 +79,7 @@ namespace ProperTree
 		///   If you wish to get the primitive property's value as a specific type,
 		///   rather than an object, use <see cref="Property.As{T}(T)"/> instead.
 		/// </summary>
-		public static bool TryGetValue(this Property self, out object value)
+		public static bool TryGetValue(this IProperty self, out object value)
 		{
 			if (self == null) throw new ArgumentNullException(nameof(self));
 			if (self is IPropertyPrimitive primitive)
@@ -83,7 +94,7 @@ namespace ProperTree
 		///   rather than an object, use <see cref="Property.As{T}"/> instead.
 		/// </summary>
 		/// <exception cref="InvalidOperationException"> Thrown if this property is not primitive. </exception>
-		public static object GetValue(this Property self)
+		public static object GetValue(this IProperty self)
 		{
 			if (!self.TryGetValue(out var value)) throw new InvalidOperationException(
 				$"Not a primitive Property: '{ self.GetType().ToFriendlyName() }'");

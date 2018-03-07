@@ -32,12 +32,15 @@ namespace ProperTree
 		}
 		
 		
-		/// <summary> Registers a value => property converter. Required to use <see cref="Property.Of{T}"/>. </summary>
+		/// <summary>
+		///   Registers a value => property converter.
+		///   Required for <see cref="Property.Of{T}"/>.
+		/// </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified converter is null. </exception>
 		/// <exception cref="InvalidOperationException"> Thrown if the specified source value type is already registered. </exception>
 		public static void RegisterToProperty<TFrom, TToProperty>(
 				Converter<TFrom, TToProperty> converter)
-			where TToProperty : Property
+			where TToProperty : IProperty
 		{
 			if (converter == null) throw new ArgumentNullException(nameof(converter));
 			if (_toProperty.TryGetValue(typeof(TFrom), out var value)) throw new InvalidOperationException(
@@ -46,12 +49,15 @@ namespace ProperTree
 		}
 		
 		
-		/// <summary> Registers a property => value converter. Required to use <see cref="Property.As{T}"/>. </summary>
+		/// <summary>
+		///   Registers a property => value converter.
+		///   Required for <see cref="Property.As{T}"/>.
+		/// </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified converter is null. </exception>
 		/// <exception cref="InvalidOperationException"> Thrown if the specified source property and target value type are already registered. </exception>
 		public static void RegisterFromProperty<TFromProperty, TTo>(
 				Converter<TFromProperty, TTo> converter)
-			where TFromProperty : Property
+			where TFromProperty : IProperty
 		{
 			if (converter == null) throw new ArgumentNullException(nameof(converter));
 			var typePair = Tuple.Create(typeof(TFromProperty), typeof(TTo));
@@ -64,7 +70,7 @@ namespace ProperTree
 		
 		/// <summary> Attempts to get the value => property converter for the specified value type. </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified value type is null. </exception>
-		public static bool TryGetToProperty(Type valueType, out Converter<object, Property> value)
+		public static bool TryGetToProperty(Type valueType, out Converter<object, IProperty> value)
 		{
 			if (valueType == null) throw new ArgumentNullException(nameof(valueType));
 			var found = _toProperty.TryGetValue(valueType, out var converter);
@@ -73,38 +79,38 @@ namespace ProperTree
 		}
 		/// <summary> Gets the value => property converter for the specified value type. </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified value type is null. </exception>
-		/// <exception cref="NotSupportedException"> Thrown if the specified type has no ToPropertyConverter registered. </exception>
-		public static Converter<object, Property> GetToProperty(Type valueType)
+		/// <exception cref="NotSupportedException"> Thrown if the specified type has no ToProperty converter registered. </exception>
+		public static Converter<object, IProperty> GetToProperty(Type valueType)
 		{
 			if (!TryGetToProperty(valueType, out var value)) throw new NotSupportedException(
-				$"No ToPropertyConverter was registered for value type '{ valueType.ToFriendlyName() }'");
+				$"No ToProperty converter was registered for value type '{ valueType.ToFriendlyName() }'");
 			return value;
 		}
 		
 		/// <summary> Attempts to get the value => property converter for the specified value type. </summary>
-		public static bool TryGetToProperty<TValue>(out Converter<TValue, Property> value)
+		public static bool TryGetToProperty<TValue>(out Converter<TValue, IProperty> value)
 		{
 			var found = _toProperty.TryGetValue(typeof(TValue), out var converter);
 			value = found ? converter.Get<TValue>() : null;
 			return found;
 		}
 		/// <summary> Gets the value => property converter for the specified value type. </summary>
-		/// <exception cref="NotSupportedException"> Thrown if the specified type has no ToPropertyConverter registered. </exception>
-		public static Converter<TValue, Property> GetToProperty<TValue>()
+		/// <exception cref="NotSupportedException"> Thrown if the specified type has no ToProperty converter registered. </exception>
+		public static Converter<TValue, IProperty> GetToProperty<TValue>()
 		{
 			if (!TryGetToProperty<TValue>(out var value)) throw new NotSupportedException(
-				$"No ToPropertyConverter was registered for value type '{ typeof(TValue).ToFriendlyName() }'");
+				$"No ToProperty converter was registered for value type '{ typeof(TValue).ToFriendlyName() }'");
 			return value;
 		}
 		
 		
 		/// <summary> Attempts to get the property => value converter for the specified value and property types. </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified property type is null. </exception>
-		/// <exception cref="ArgumentException"> Thrown if the specified property type not a Property type. </exception>
-		public static bool TryGetFromProperty<TValue>(Type propertyType, out Converter<Property, TValue> value)
+		/// <exception cref="ArgumentException"> Thrown if the specified property type is not an <see cref="IProperty"/> type. </exception>
+		public static bool TryGetFromProperty<TValue>(Type propertyType, out Converter<IProperty, TValue> value)
 		{
 			if (propertyType == null) throw new ArgumentNullException(nameof(propertyType));
-			if (!typeof(Property).IsAssignableFrom(propertyType)) throw new ArgumentException(
+			if (!typeof(IProperty).IsAssignableFrom(propertyType)) throw new ArgumentException(
 				$"The specified property type is not actually a Property type", nameof(propertyType));
 			var typePair = Tuple.Create(propertyType, typeof(TValue));
 			var found = _fromProperty.TryGetValue(typePair, out var converter);
@@ -114,19 +120,19 @@ namespace ProperTree
 		
 		/// <summary> Gets the property => value converter for the specified value and property types. </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified property type is null. </exception>
-		/// <exception cref="ArgumentException"> Thrown if the specified property type not a Property type. </exception>
-		/// <exception cref="NotSupportedException"> Thrown if the specified types have no FromPropertyConverter registered. </exception>
-		public static Converter<Property, TValue> GetFromProperty<TValue>(Type propertyType)
+		/// <exception cref="ArgumentException"> Thrown if the specified property type is not an <see cref="IProperty"/> type. </exception>
+		/// <exception cref="NotSupportedException"> Thrown if the specified types have no FromProperty converter registered. </exception>
+		public static Converter<IProperty, TValue> GetFromProperty<TValue>(Type propertyType)
 		{
 			if (!TryGetFromProperty<TValue>(propertyType, out var value)) throw new NotSupportedException(
-				$"No FromPropertyConverter was registered for value type '{ typeof(TValue) }' " +
+				$"No FromProperty converter was registered for value type '{ typeof(TValue) }' " +
 				$"and property type '{ propertyType.ToFriendlyName() }'");
 			return value;
 		}
 		
 		/// <summary> Attempts to get the property => value converter for the specified value and property types. </summary>
 		public static bool TryGetFromProperty<TValue, TProperty>(out Converter<TProperty, TValue> value)
-			where TProperty : Property
+			where TProperty : IProperty
 		{
 			var typePair = Tuple.Create(typeof(TProperty), typeof(TValue));
 			var found = _fromProperty.TryGetValue(typePair, out var converter);
@@ -134,12 +140,12 @@ namespace ProperTree
 			return found;
 		}
 		/// <summary> Gets the property => value converter for the specified value and property types. </summary>
-		/// <exception cref="NotSupportedException"> Thrown if the specified types have no FromPropertyConverter registered. </exception>
+		/// <exception cref="NotSupportedException"> Thrown if the specified types have no FromProperty converter registered. </exception>
 		public static Converter<TProperty, TValue> GetFromProperty<TValue, TProperty>()
-			where TProperty : Property
+			where TProperty : IProperty
 		{
 			if (!TryGetFromProperty<TValue, TProperty>(out var value)) throw new NotSupportedException(
-				$"No FromPropertyConverter was registered for value type '{ typeof(TValue).ToFriendlyName() }' " +
+				$"No FromProperty converter was registered for value type '{ typeof(TValue).ToFriendlyName() }' " +
 				$"and property type '{ typeof(TProperty).ToFriendlyName() }'");
 			return value;
 		}
@@ -149,20 +155,20 @@ namespace ProperTree
 		
 		private class ToPropertyConverter
 		{
-			private Converter<object, Property> _fromObject;
+			private Converter<object, IProperty> _fromObject;
 			private Delegate _fromValue;
 			
 			public static ToPropertyConverter Create<TValue, TProperty>(
 					Converter<TValue, TProperty> converter)
-				where TProperty : Property => new ToPropertyConverter {
+				where TProperty : IProperty => new ToPropertyConverter {
 					_fromObject = (value) => converter((TValue)value),
 					_fromValue  = converter
 				};
 			
-			public Converter<object, Property> Get()
+			public Converter<object, IProperty> Get()
 				=> _fromObject;
-			public Converter<TValue, Property> Get<TValue>()
-				=> (Converter<TValue, Property>)_fromValue;
+			public Converter<TValue, IProperty> Get<TValue>()
+				=> (Converter<TValue, IProperty>)_fromValue;
 		}
 		
 		private class FromPropertyConverter
@@ -172,16 +178,16 @@ namespace ProperTree
 			
 			public static FromPropertyConverter Create<TProperty, TValue>(
 					Converter<TProperty, TValue> converter)
-				where TProperty : Property
+				where TProperty : IProperty
 				=> new FromPropertyConverter {
-					_fromAny     = (Converter<Property, TValue>)((property) => converter((TProperty)property)),
+					_fromAny     = (Converter<IProperty, TValue>)((property) => converter((TProperty)property)),
 					_fromGeneric = converter
 				};
 			
-			public Converter<Property, TValue> Get<TValue>()
-				=> (Converter<Property, TValue>)_fromAny;
+			public Converter<IProperty, TValue> Get<TValue>()
+				=> (Converter<IProperty, TValue>)_fromAny;
 			public Converter<TProperty, TValue> Get<TValue, TProperty>()
-				where TProperty : Property
+				where TProperty : IProperty
 				=> (Converter<TProperty, TValue>)_fromGeneric;
 		}
 	}

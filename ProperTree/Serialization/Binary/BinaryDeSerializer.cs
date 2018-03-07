@@ -5,7 +5,7 @@ namespace ProperTree.Serialization.Binary
 {
 	public abstract class BinaryDeSerializer<TProperty>
 		: IBinaryDeSerializer
-		where TProperty : Property
+		where TProperty : IProperty
 	{
 		public abstract TProperty Read(BinaryReader reader);
 		
@@ -15,9 +15,9 @@ namespace ProperTree.Serialization.Binary
 		
 		public Type PropertyType => typeof(TProperty);
 		
-		Property IBinaryDeSerializer.Read(BinaryReader reader)
+		IProperty IBinaryDeSerializer.Read(BinaryReader reader)
 			=> Read(reader);
-		void IBinaryDeSerializer.Write(BinaryWriter writer, Property value)
+		void IBinaryDeSerializer.Write(BinaryWriter writer, IProperty value)
 			=> Write(writer, (TProperty)value);
 	}
 	
@@ -25,8 +25,8 @@ namespace ProperTree.Serialization.Binary
 	{
 		Type PropertyType { get; }
 		
-		Property Read(BinaryReader reader);
+		IProperty Read(BinaryReader reader);
 		
-		void Write(BinaryWriter writer, Property value);
+		void Write(BinaryWriter writer, IProperty value);
 	}
 }

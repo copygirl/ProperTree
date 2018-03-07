@@ -6,47 +6,45 @@ using ProperTree.Utility;
 namespace ProperTree
 {
 	/// <summary>
-	///   Base class for all Property classes. Used to store additional,
-	///   extensible information on game objects in a common format that
-	///   can be easily and compactly read from and written to file and
-	///   network streams.
+	///   Static helper class which provides instantiation methods to
+	///   create <see cref="IProperty"/> objects, as well as extension
+	///   methods to turn them back into primitive and data types.
 	///   
-	///   <see cref="PropertyConverterRegistry"/> is used to register
-	///   default and custom Property converters, which are what powers
-	///   the <see cref="As"/> and <see cref="Of"/> methods.
-	///   
-	///   <see cref="BinaryDeSerializerRegisty"/> is used for binary
-	///   de/serializers, which read/write Properties from/to streams.
+	///   <seealso cref="PropertyConverterRegistry"/>
 	/// </summary>
-	public abstract class Property
-		: IEquatable<Property>
+	public static class Property
 	{
-		/// <summary> Creates a Property from the specified value.
-		///           If the value is already a Property, it is returned. </summary>
+		/// <summary>
+		///   Creates an <see cref="IProperty"/> from the specified value.
+		///   If the value is already a property, it is returned.
+		/// </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified value is null. </exception>
 		/// <exception cref="NotSupportedException"> Thrown if the specified value can't be converted to a Property. </exception>
-		public static Property Of<T>(T value)
+		public static IProperty Of<T>(T value)
 		{
 			if (value == null) throw new ArgumentNullException(nameof(value));
-			if (value is Property property) return property;
+			if (value is IProperty property) return property;
 			if (PropertyConverterRegistry.TryGetToProperty<T>(out var converter)) return converter(value);
 			throw new NotSupportedException($"Can't convert to Property from type '{ typeof(T).ToFriendlyName() }'");
 		}
 		
-		/// <summary> Creates a Property from the specified value.
-		///           If the value is already a Property, it is returned. </summary>
+		/// <summary>
+		///   Creates an <see cref="IProperty"/> from the specified value.
+		///   If the value is already a property, it is returned.
+		/// </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified value is null. </exception>
-		/// <exception cref="NotSupportedException"> Thrown if the specified value can't be converted to a Property. </exception>
-		public static Property Of(object value)
+		/// <exception cref="NotSupportedException"> Thrown if the specified value can't be converted to a property. </exception>
+		public static IProperty Of(object value)
 		{
 			if (value == null) throw new ArgumentNullException(nameof(value));
-			if (value is Property property) return property;
+			if (value is IProperty property) return property;
 			if (PropertyConverterRegistry.TryGetToProperty(value.GetType(), out var converter)) return converter(value);
 			throw new NotSupportedException($"Can't convert to Property from type '{ value.GetType().ToFriendlyName() }'");
 		}
 		
+		
 		/// <summary>
-		///   Converts or casts this Property to the specified type.
+		///   Converts or casts the specified <see cref="IProperty"/> to the specified type.
 		///   
 		///   Note that this works as an extension of the "as" operator,
 		///   if no conversion to the specified type has been registered.
@@ -58,18 +56,20 @@ namespace ProperTree
 		///   To get any primitive property's underlying value, use
 		///   <see cref="PropertyPrimitiveExtensions.GetValue"/>.
 		/// </summary>
+		/// <exception cref="ArgumentNullException"> Thrown if the specified property is null. </exception>
 		/// <exception cref="NotSupportedException"> Thrown if the specified property can't be converted to the specified type. </exception>
-		public T As<T>()
+		public static T As<T>(this IProperty property)
 		{
-			if (this is T result) return result;
-			if (PropertyConverterRegistry.TryGetFromProperty<T>(GetType(), out var converter)) return converter(this);
-			throw new NotSupportedException(
-				$"Can't convert from '{ GetType().ToFriendlyName() }' to type '{ typeof(T).ToFriendlyName() }'");
+			if (!property.TryAs<T>(out var result))
+				throw new NotSupportedException(
+					$"Can't convert from '{ property.GetType().ToFriendlyName() }' " +
+					$"to type '{ typeof(T).ToFriendlyName() }'");
+			return result;
 		}
 		
 		/// <summary>
-		///   Converts or casts this Property to the specified type, or the
-		///   specified default value if the conversion did not succeed.
+		///   Converts or casts the specified <see cref="IProperty"/> to the specified
+		///   type, or the specified default value if the conversion did not succeed.
 		///   
 		///   Note that this works as an extension of the "as" operator,
 		///   if no conversion to the specified type has been registered.
@@ -81,42 +81,35 @@ namespace ProperTree
 		///   To get any primitive property's underlying value, use
 		///   <see cref="PropertyPrimitiveExtensions.TryGetValue"/>.
 		/// </summary>
-		public T As<T>(T @default)
-			=> (this is T result) ? result
-				: PropertyConverterRegistry.TryGetFromProperty<T>(GetType(), out var converter)
-					? converter(this) : @default;
-		
-		/// <summary> Gets or sets the property at the specified index of this list property. </summary>
-		/// <exception cref="InvalidOperationException"> Thrown if this property is not a list. </exception>
-		/// <exception cref="ArgumentOutOfRangeException"> Thrown if the specified index is not valid. </exception>
-		/// <exception cref="ArgumentNullException"> Thrown if the specified value is null. </exception>
-		public virtual Property this[int index] {
-			get => throw new InvalidOperationException($"Not a list Property: '{ GetType().ToFriendlyName() }'");
-			set => throw new InvalidOperationException($"Not a list Property: '{ GetType().ToFriendlyName() }'");
-		}
+		/// <exception cref="ArgumentNullException"> Thrown if the specified property is null. </exception>
+		public static T As<T>(this IProperty property, T @default)
+			=> property.TryAs<T>(out var result) ? result : @default;
 		
 		/// <summary>
-		///   Gets or sets the property with the specified name of this dictionary property.
+		///   Attempts to converts or cast the specified
+		///   <see cref="IProperty"/> to the specified type.
 		///   
-		///   If the specified name is found, a get operation will return the associated property,
-		///   and a set operation will overwrite the existing entry with the specified value,
-		///   or remove it if the specified value is null.
+		///   Note that this works as an extension of the "as" operator,
+		///   if no conversion to the specified type has been registered.
 		///   
-		///   If the specified name is not found, a get operation will return null,
-		///   and a set operation adds a new entry with the specified value.
+		///   To get any primitive property's underlying value, use
+		///   <see cref="PropertyPrimitiveExtensions.TryGetValue"/>.
 		/// </summary>
-		/// <exception cref="InvalidOperationException"> Thrown if this property is not a dictionary. </exception>
-		/// <exception cref="ArgumentNullException"> Thrown if the specified name is null. </exception>
-		public virtual Property this[string name] {
-			get => throw new InvalidOperationException($"Not a dictionary Property: '{ GetType().ToFriendlyName() }'");
-			set => throw new InvalidOperationException($"Not a dictionary Property: '{ GetType().ToFriendlyName() }'");
+		/// <exception cref="ArgumentNullException"> Thrown if the specified property is null. </exception>
+		public static bool TryAs<T>(this IProperty property, out T result)
+		{
+			if (property == null) throw new ArgumentNullException(nameof(property));
+			if (property is T r) {
+				result = r;
+				return true;
+			}
+			if (PropertyConverterRegistry.TryGetFromProperty<T>(
+					property.GetType(), out var converter)) {
+				result = converter(property);
+				return true;
+			}
+			result = default(T);
+			return false;
 		}
-		
-		
-		// IEquatable implementation
-		
-		/// <summary> Returns if the specified property's value
-		///           (recursively) equals this property's value. </summary>
-		public abstract bool Equals(Property property);
 	}
 }

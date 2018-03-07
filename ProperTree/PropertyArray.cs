@@ -3,11 +3,12 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using ProperTree.Serialization;
+using ProperTree.Utility;
 
 namespace ProperTree
 {
 	public class PropertyArray<T>
-		: Property, IPropertyArray
+		: IProperty, IPropertyArray
 		where T : struct
 	{
 		public Type ElementType
@@ -15,6 +16,7 @@ namespace ProperTree
 		
 		/// <summary>
 		///   Gets the underlying array of this array property.
+		///   
 		///   <seealso cref="Property.As{T}"/>
 		///   <seealso cref="PropertyPrimitiveExtensions.GetValue"/>
 		/// </summary>
@@ -22,6 +24,16 @@ namespace ProperTree
 		
 		internal PropertyArray(T[] array)
 			=> Array = array;
+		
+		public IProperty this[int index] {
+			get => throw new InvalidOperationException($"Not a list property: '{ GetType().ToFriendlyName() }'");
+			set => throw new InvalidOperationException($"Not a list property: '{ GetType().ToFriendlyName() }'");
+		}
+		
+		public IProperty this[string name] {
+			get => throw new InvalidOperationException($"Not a dictionary property: '{ GetType().ToFriendlyName() }'");
+			set => throw new InvalidOperationException($"Not a dictionary property: '{ GetType().ToFriendlyName() }'");
+		}
 		
 		public static void RegisterConverters()
 		{
@@ -34,7 +46,7 @@ namespace ProperTree
 		
 		// IEquatable implementation
 		
-		public override bool Equals(Property property)
+		public bool Equals(IProperty property)
 			=> (property is PropertyArray<T> array)
 				&& Array.SequenceEqual(array.Array);
 	}

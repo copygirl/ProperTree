@@ -41,7 +41,7 @@ namespace ProperTree.Serialization
 		/// <summary> Reads a full property using the specified BinaryReader. </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified reader is null. </exception>
 		/// <exception cref="PropertyParseException"> Thrown if there was an error while reading the property. </exception>
-		public static Property ReadProperty(BinaryReader reader)
+		public static IProperty ReadProperty(BinaryReader reader)
 		{
 			if (reader == null) throw new ArgumentNullException(nameof(reader));
 			var deSerializer = ReadDeSerializer(reader);
@@ -57,9 +57,9 @@ namespace ProperTree.Serialization
 		
 		/// <summary> Writes a full property using the specified BinaryWriter. </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified writer or property is null. </exception>
-		/// <exception cref="ArgumentException"> Thrown if the specified property type is not a Property type. </exception>
+		/// <exception cref="ArgumentException"> Thrown if the specified property type is not an <see cref="IProperty"/> type. </exception>
 		/// <exception cref="NotSupportedException"> Thrown if the specified property has no de/serializer registered. </exception>
-		public static void WriteProperty(BinaryWriter writer, Property property)
+		public static void WriteProperty(BinaryWriter writer, IProperty property)
 		{
 			var deSerializer = GetAndWriteDeSerializer(writer, property);
 			deSerializer.Write(writer, property);
@@ -89,7 +89,7 @@ namespace ProperTree.Serialization
 		}
 		
 		/// <exception cref="ArgumentNullException"> Thrown if the specified writer or property is null. </exception>
-		public static IBinaryDeSerializer GetAndWriteDeSerializer(BinaryWriter writer, Property property)
+		public static IBinaryDeSerializer GetAndWriteDeSerializer(BinaryWriter writer, IProperty property)
 		{
 			if (writer == null) throw new ArgumentNullException(nameof(writer));
 			if (property == null) throw new ArgumentNullException(nameof(property));
@@ -115,7 +115,7 @@ namespace ProperTree.Serialization
 		/// <exception cref="ArgumentNullException"> Thrown if the specified de/serializer is null. </exception>
 		/// <exception cref="InvalidOperationException"> Thrown if the specified ID is already used. </exception>
 		public static void Register<TProperty>(int id, BinaryDeSerializer<TProperty> deSerializer)
-			where TProperty : Property
+			where TProperty : IProperty
 		{
 			if ((id < MIN_ID) || (id > MAX_ID)) throw new ArgumentOutOfRangeException(nameof(id),
 				$"The ID { id } is not within the valid range ({ MIN_ID } - { MAX_ID })");
@@ -134,14 +134,14 @@ namespace ProperTree.Serialization
 		
 		/// <summary> Returns the de/serializer for the specified property, or null if none. </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified property is null. </exception>
-		public static IBinaryDeSerializer GetFor(Property property, out int id)
+		public static IBinaryDeSerializer GetFor(IProperty property, out int id)
 		{
 			if (property == null) throw new ArgumentNullException(nameof(property));
 			return GetByTypeInternal(property.GetType(), out id);
 		}
 		/// <summary> Returns the de/serializer for the specified property type, or null if none. </summary>
 		public static IBinaryDeSerializer GetByType<TProperty>(out int id)
-			where TProperty : Property
+			where TProperty : IProperty
 			=> GetByTypeInternal(typeof(TProperty), out id);
 		
 		private static IBinaryDeSerializer GetByTypeInternal(

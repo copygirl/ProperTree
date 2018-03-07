@@ -31,8 +31,8 @@ namespace ProperTree
 		}
 		
 		public IProperty this[string name] {
-			get => throw new InvalidOperationException($"Not a dictionary property: '{ GetType().ToFriendlyName() }'");
-			set => throw new InvalidOperationException($"Not a dictionary property: '{ GetType().ToFriendlyName() }'");
+			get => throw new InvalidOperationException($"Not a map property: '{ GetType().ToFriendlyName() }'");
+			set => throw new InvalidOperationException($"Not a map property: '{ GetType().ToFriendlyName() }'");
 		}
 		
 		public static void RegisterConverters()

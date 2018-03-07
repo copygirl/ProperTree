@@ -32,7 +32,7 @@ namespace ProperTree.Serialization
 			Register( 0x27, new BinaryDeSerializerArray<double>() );
 			
 			Register( 0x30, new BinaryDeSerializerList() );
-			Register( 0x31, new BinaryDeSerializerDictionary() );
+			Register( 0x31, new BinaryDeSerializerMap() );
 		}
 		
 		

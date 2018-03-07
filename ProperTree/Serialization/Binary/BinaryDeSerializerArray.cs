@@ -2,7 +2,6 @@ using System.IO;
 
 namespace ProperTree.Serialization.Binary
 {
-	// TODO: Use protobuf to write these?
 	public class BinaryDeSerializerArray<T>
 		: BinaryDeSerializer<PropertyArray<T>>
 		where T : struct

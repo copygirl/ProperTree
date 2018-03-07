@@ -11,8 +11,8 @@ namespace ProperTree.Serialization.Binary
 		{
 			var count = reader.ReadUInt16();
 			if (count > PropertyList.MAX_SIZE) throw new Exception(
-				"PropertyList count is larger than MAX_SIZE " +
-				$"({ count } > { PropertyList.MAX_SIZE })");
+				$"{ nameof(PropertyList) } count is larger than " +
+				$"MAX_SIZE ({ count } > { PropertyList.MAX_SIZE })");
 			var list = new List<IProperty>(count);
 			for (var i = 0; i < count; i++)
 				list.Add(BinaryDeSerializerRegistry.ReadProperty(reader));

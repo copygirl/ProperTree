@@ -1,18 +1,18 @@
-using System;
+﻿using System;
 using System.IO;
 
 namespace ProperTree.Serialization.Binary
 {
-	public class BinaryDeSerializerDictionary
-		: BinaryDeSerializer<PropertyDictionary>
+	public class BinaryDeSerializerMap
+		: BinaryDeSerializer<PropertyMap>
 	{
-		public override PropertyDictionary Read(BinaryReader reader)
+		public override PropertyMap Read(BinaryReader reader)
 		{
-			var dictionary = new PropertyDictionary();
+			var dictionary = new PropertyMap();
 			var count = reader.ReadUInt16();
-			if (count > PropertyDictionary.MAX_SIZE) throw new Exception(
-				"PropertyDictionary count is larger than MAX_SIZE " +
-				$"({ count } > { PropertyDictionary.MAX_SIZE })");
+			if (count > PropertyMap.MAX_SIZE) throw new Exception(
+				$"{ nameof(PropertyMap) } count is larger than " +
+				$"MAX_SIZE ({ count } > { PropertyMap.MAX_SIZE })");
 			for (var i = 0; i < count; i++) {
 				var name     = reader.ReadString();
 				var property = BinaryDeSerializerRegistry.ReadProperty(reader);
@@ -21,7 +21,7 @@ namespace ProperTree.Serialization.Binary
 			return dictionary;
 		}
 		
-		public override void Write(BinaryWriter writer, PropertyDictionary dictionary)
+		public override void Write(BinaryWriter writer, PropertyMap dictionary)
 		{
 			writer.Write((ushort)dictionary.Count);
 			foreach (var entry in dictionary) {

@@ -11,7 +11,7 @@ namespace ProperTree.Tests
 		[Fact]
 		public void BasicTest()
 		{
-			var dict = new PropertyDictionary {
+			var map = new PropertyMap {
 				{   "bool" ,           true },
 				{   "byte" ,      (byte)128 },
 				{  "short" ,   (short)32000 },
@@ -25,23 +25,23 @@ namespace ProperTree.Tests
 				{ "byte array", Property.Of(new byte[]{ 1, 2, 3 }) },
 				{ "float array", Property.Of(new float[]{ 1.0F, 2.0F, 3.0F }) },
 				
-				{ "dictionary list", new PropertyList {
-					new PropertyDictionary { { "type",   "zombie" }, { "health", 20 } },
-					new PropertyDictionary { { "type", "skeleton" }, { "health", 15 } },
-					new PropertyDictionary { { "type",  "creeper" }, { "health", 10 } },
+				{ "map list", new PropertyList {
+					new PropertyMap { { "type",   "zombie" }, { "health", 20 } },
+					new PropertyMap { { "type", "skeleton" }, { "health", 15 } },
+					new PropertyMap { { "type",  "creeper" }, { "health", 10 } },
 				} },
 			};
 			
 			var stream = new MemoryStream();
 			
 			var writer = new BinaryWriter(stream, Encoding.UTF8);
-			BinaryDeSerializerRegistry.WriteProperty(writer, dict);
+			BinaryDeSerializerRegistry.WriteProperty(writer, map);
 			stream.Position = 0;
 			
 			var reader = new BinaryReader(stream, Encoding.UTF8);
-			var readDict = BinaryDeSerializerRegistry.ReadProperty(reader);
+			var readMap = BinaryDeSerializerRegistry.ReadProperty(reader);
 			
-			Assert.Equal(dict, readDict);
+			Assert.Equal(map, readMap);
 		}
 	}
 }

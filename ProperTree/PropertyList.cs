@@ -25,8 +25,8 @@ namespace ProperTree
 		}
 		
 		public IProperty this[string name] {
-			get => throw new InvalidOperationException($"Not a dictionary property: '{ GetType().ToFriendlyName() }'");
-			set => throw new InvalidOperationException($"Not a dictionary property: '{ GetType().ToFriendlyName() }'");
+			get => throw new InvalidOperationException($"Not a map property: '{ GetType().ToFriendlyName() }'");
+			set => throw new InvalidOperationException($"Not a map property: '{ GetType().ToFriendlyName() }'");
 		}
 		
 		internal PropertyList(List<IProperty> list)
@@ -59,7 +59,7 @@ namespace ProperTree
 				throw new ArgumentOutOfRangeException(nameof(index));
 			if (property == null) throw new ArgumentNullException(nameof(property));
 			if (_list.Count == MAX_SIZE) throw new InvalidOperationException(
-				$"PropertyList can't exceed MAX_SIZE ({ MAX_SIZE })");
+				$"{ nameof(PropertyList) } can't exceed MAX_SIZE ({ MAX_SIZE })");
 			_list.Insert(index, property);
 		}
 		
@@ -151,7 +151,7 @@ namespace ProperTree
 		{
 			if (self == null) throw new ArgumentNullException(nameof(self));
 			if (!(self is PropertyList l)) throw new InvalidOperationException(
-				$"Not a list Property: '{ self.GetType().ToFriendlyName() }'");
+				$"Not a list property: '{ self.GetType().ToFriendlyName() }'");
 			return l;
 		}
 		

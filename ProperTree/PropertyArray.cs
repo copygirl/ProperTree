@@ -1,8 +1,5 @@
 using System;
-using System.IO;
 using System.Linq;
-using System.Runtime.InteropServices;
-using ProperTree.Serialization;
 using ProperTree.Utility;
 
 namespace ProperTree

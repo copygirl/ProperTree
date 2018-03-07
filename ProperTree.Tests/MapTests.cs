@@ -20,7 +20,7 @@ namespace ProperTree.Tests
 				
 				{ "primitive list", new PropertyList { "a", "b", "c" } },
 				{ "byte array", Property.Of(new byte[]{ 1, 2, 3 }) },
-				{ "float array", Property.Of(new float[]{ 1.0F, 2.0F, 3.0F }) },
+				{ "float array", Property.Of(new []{ 1.0F, 2.0F, 3.0F }) },
 				
 				{ "map list", new PropertyList {
 					new PropertyMap { { "type",   "zombie" }, { "health", 20 } },

@@ -38,9 +38,8 @@ namespace ProperTree
 		/// </summary>
 		/// <exception cref="ArgumentNullException"> Thrown if the specified converter is null. </exception>
 		/// <exception cref="InvalidOperationException"> Thrown if the specified source value type is already registered. </exception>
-		public static void RegisterToProperty<TFrom, TToProperty>(
-				Converter<TFrom, TToProperty> converter)
-			where TToProperty : IProperty
+		public static void RegisterToProperty<TFrom>(
+				Converter<TFrom, IProperty> converter)
 		{
 			if (converter == null) throw new ArgumentNullException(nameof(converter));
 			if (_toProperty.TryGetValue(typeof(TFrom), out var value)) throw new InvalidOperationException(
@@ -83,7 +82,7 @@ namespace ProperTree
 		public static Converter<object, IProperty> GetToProperty(Type valueType)
 		{
 			if (!TryGetToProperty(valueType, out var value)) throw new NotSupportedException(
-				$"No ToProperty converter was registered for value type '{ valueType.ToFriendlyName() }'");
+				$"No ToProperty converter was registered for type '{ valueType.ToFriendlyName() }'");
 			return value;
 		}
 		
@@ -99,7 +98,7 @@ namespace ProperTree
 		public static Converter<TValue, IProperty> GetToProperty<TValue>()
 		{
 			if (!TryGetToProperty<TValue>(out var value)) throw new NotSupportedException(
-				$"No ToProperty converter was registered for value type '{ typeof(TValue).ToFriendlyName() }'");
+				$"No ToProperty converter was registered for type '{ typeof(TValue).ToFriendlyName() }'");
 			return value;
 		}
 		
@@ -111,7 +110,7 @@ namespace ProperTree
 		{
 			if (propertyType == null) throw new ArgumentNullException(nameof(propertyType));
 			if (!typeof(IProperty).IsAssignableFrom(propertyType)) throw new ArgumentException(
-				$"The specified property type is not actually a Property type", nameof(propertyType));
+				$"The specified property type is not actually an IProperty type", nameof(propertyType));
 			var typePair = Tuple.Create(propertyType, typeof(TValue));
 			var found = _fromProperty.TryGetValue(typePair, out var converter);
 			value = found ? converter.Get<TValue>() : null;
@@ -125,7 +124,7 @@ namespace ProperTree
 		public static Converter<IProperty, TValue> GetFromProperty<TValue>(Type propertyType)
 		{
 			if (!TryGetFromProperty<TValue>(propertyType, out var value)) throw new NotSupportedException(
-				$"No FromProperty converter was registered for value type '{ typeof(TValue) }' " +
+				$"No FromProperty converter was registered for type '{ typeof(TValue) }' " +
 				$"and property type '{ propertyType.ToFriendlyName() }'");
 			return value;
 		}
@@ -145,7 +144,7 @@ namespace ProperTree
 			where TProperty : IProperty
 		{
 			if (!TryGetFromProperty<TValue, TProperty>(out var value)) throw new NotSupportedException(
-				$"No FromProperty converter was registered for value type '{ typeof(TValue).ToFriendlyName() }' " +
+				$"No FromProperty converter was registered for type '{ typeof(TValue).ToFriendlyName() }' " +
 				$"and property type '{ typeof(TProperty).ToFriendlyName() }'");
 			return value;
 		}
